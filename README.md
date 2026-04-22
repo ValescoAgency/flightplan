@@ -8,11 +8,12 @@ Primary consumer: the AFK (autonomous) coding governance pipeline at
 ## Contents
 
 - [`docs/starter-set.md`](docs/starter-set.md) — the specific skills adopted for
-  Valesco work, with rationale. Pending — see VA-143.
+  Valesco work, with rationale.
 - [`docs/gaps.md`](docs/gaps.md) — skills known to be missing, registered as they
-  bite. Pending — see VA-143.
-- [`skills/`](skills/) — authored Valesco skills. Empty at repo birth; populated
-  as gaps are closed.
+  bite.
+- `<skill-name>/SKILL.md` — authored Valesco skills live at the repo root,
+  one directory per skill (Claude Code plugin convention). Empty at repo
+  birth; populated as gaps are closed.
 
 ## Skills-vs-pipeline rule
 
