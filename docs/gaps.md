@@ -17,16 +17,6 @@ Each entry:
 
 ## Open skill gaps
 
-### `/draft-contract`
-
-- **Purpose**: Given a Linear issue ID, lift intent into
-  `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens on every
-  authority-bearing field. Per G8 of the governance plan, the draft is
-  structurally non-executable until a human replaces the tokens.
-- **Trigger-to-author**: First AFK pilot run. Needed before VA-154 ships.
-- **Classification**: skill.
-- **Tracking**: [VA-154](https://linear.app/valescoagency/issue/VA-154).
-
 ### `/attest`
 
 - **Purpose**: Render the attestation checklist from a `.goal-contract.yml`
@@ -108,4 +98,17 @@ in `valesco-platform/afk/`.
 
 ## Closed gaps
 
-_(none yet — entries move here from "Open" when authored + landed.)_
+### `/draft-contract` — shipped 2026-04-22
+
+- **Ships**: `draft-contract/SKILL.md`, `template.yml`, `authority-fields.md`.
+- **Tracking**: [VA-154](https://linear.app/valescoagency/issue/VA-154).
+- **Landed via**: PR [#1](https://github.com/ValescoAgency/skills/pull/1)
+  (initial) + follow-up to strict-validate drafts post-VA-158 merge.
+- **Notes**: Drafts now validate cleanly against
+  `afk/schemas/goal-contract.v1.json` thanks to
+  [VA-158](https://linear.app/valescoagency/issue/VA-158) (approvedAt +
+  contractHash optional at schema level; pre-flight's
+  `structural.metadata-presence` stage enforces presence). Validator
+  policyId / policyVersion emit as defaults with `# PLANNER_SUGGESTED`
+  comments rather than tokens, since string patterns can't hold token
+  strings — matches the tier/budget precedent.
