@@ -17,15 +17,21 @@ Each entry:
 
 ## Open skill gaps
 
-### `/draft-contract`
+### `/draft-contract` — **in progress**
 
 - **Purpose**: Given a Linear issue ID, lift intent into
   `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens on every
   authority-bearing field. Per G8 of the governance plan, the draft is
   structurally non-executable until a human replaces the tokens.
-- **Trigger-to-author**: First AFK pilot run. Needed before VA-154 ships.
+- **Status**: PR [#1](https://github.com/ValescoAgency/skills/pull/1)
+  authored 2026-04-21. Ships `draft-contract/SKILL.md`, `template.yml`,
+  `authority-fields.md` at the repo root.
 - **Classification**: skill.
 - **Tracking**: [VA-154](https://linear.app/valescoagency/issue/VA-154).
+- **Blocker for full acceptance**: [VA-158](https://linear.app/valescoagency/issue/VA-158)
+  — draft cannot strictly validate against `goal-contract.v1.json` until
+  `metadata.approvedAt` + `metadata.contractHash` are made optional in v1
+  (pre-flight enforces presence structurally instead).
 
 ### `/attest`
 
