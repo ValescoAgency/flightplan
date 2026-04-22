@@ -1,0 +1,69 @@
+# .goal-contract.draft.yml
+# Authored by /draft-contract from Linear issue <LINEAR_ID>.
+# This draft is NON-EXECUTABLE until every <PLANNER_SUGGESTED:> token is replaced
+# and the file is renamed to .goal-contract.yml.
+#
+# Pre-flight hard-rejects any .goal-contract.yml containing a
+# <PLANNER_SUGGESTED:> token per governance plan G8.
+
+schemaVersion: "1.0.0"
+
+metadata:
+  linearIssueId: "<LINEAR_ID>"       # populated from skill argument
+  tier: 3                             # PLANNER_SUGGESTED: default; raise to 2/1 per risk
+  created: "<ISO_TIMESTAMP>"          # populated by skill
+  # approvedAt: populated at afk-ready label time; leave unset in draft
+  # contractHash: populated by pre-flight after normalization; leave unset in draft
+  # customer: REQUIRED when tier is 1. Uncomment and fill.
+  # customer: "<PLANNER_SUGGESTED: customer identifier, e.g. acme-corp>"
+
+intent:
+  description: |
+    <INTENT_DESCRIPTION_FROM_LINEAR>
+  successCriteria:
+    - <SUCCESS_CRITERIA_FROM_LINEAR>
+  # nonGoals is optional per schema; include when the Linear issue has them
+  nonGoals:
+    - <NON_GOALS_FROM_LINEAR>
+  anchors:
+    interfaces:
+      - "<PLANNER_SUGGESTED: list TypeScript interfaces or types the contract references; empty array if truly none>"
+    configShapes:
+      - "<PLANNER_SUGGESTED: list config objects (e.g. OAuthConfig, SupabaseConfig) the contract depends on; empty array if none>"
+    docs: []
+      # Populated from Linear-body URLs pointing at docs/ADR/PRD paths.
+      # Each entry: { url, versionHash, description? }. See schema.
+
+scope:
+  requiredPaths:
+    - "<PLANNER_SUGGESTED: globs the agent is expected to touch; these must match real files at pre-flight. For migration contracts, supabase/migrations/** goes here, NOT merely in writePaths.>"
+  writePaths:
+    - "<PLANNER_SUGGESTED: globs the agent may modify; must include all requiredPaths. Default hard-floor + escalated-floor paths are never writable via this field.>"
+  # protectedPaths is additive on top of the default floor. Leave unset unless
+  # the contract needs to protect paths beyond the floor.
+  # protectedPaths: []
+  validator:
+    policyId: "<PLANNER_SUGGESTED: validator policy ID, e.g. valesco-platform.v1>"
+    policyVersion: "<PLANNER_SUGGESTED: semver, e.g. 1.0.0>"
+  # metaContract + sensitivePaths are computed by pre-flight — leave unset.
+
+budget:
+  timeMinutes: 15      # PLANNER_SUGGESTED: Tier 3 default; widen with evidence
+  maxRetries: 2        # PLANNER_SUGGESTED: Tier 3 default
+  maxCommits: 5        # PLANNER_SUGGESTED: Tier 3 default
+  perRunUsd: 0.50      # PLANNER_SUGGESTED: Tier 3 default per governance G6
+  perContractUsd: 1.50 # PLANNER_SUGGESTED: Tier 3 default per governance G6
+  # costEstimateUsd is populated by pre-flight — leave unset.
+
+terminationConditions:
+  - <TERMINATION_FROM_LINEAR_OR_TOKEN>
+
+# canaryPlan is REQUIRED when metadata.tier is 1. Uncomment and author:
+# canaryPlan:
+#   metrics:
+#     - "<PLANNER_SUGGESTED: e.g. error_rate, p95_latency>"
+#   thresholds:
+#     error_rate: 0.01
+#     p95_latency_ms: 500
+#   rollbackTrigger: "<PLANNER_SUGGESTED: command or Vercel action, e.g. 'vercel rollback $PREVIOUS_DEPLOYMENT_URL'>"
+#   windowMinutes: 15
