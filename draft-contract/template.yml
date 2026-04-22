@@ -43,8 +43,8 @@ scope:
   # the contract needs to protect paths beyond the floor.
   # protectedPaths: []
   validator:
-    policyId: "<PLANNER_SUGGESTED: validator policy ID, e.g. valesco-platform.v1>"
-    policyVersion: "<PLANNER_SUGGESTED: semver, e.g. 1.0.0>"
+    policyId: "valesco-platform.v1"   # PLANNER_SUGGESTED: default; change only if a per-repo policy exists
+    policyVersion: "1.0.0"            # PLANNER_SUGGESTED: default; bump when the policy repo publishes a new version
   # metaContract + sensitivePaths are computed by pre-flight — leave unset.
 
 budget:

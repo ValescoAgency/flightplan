@@ -44,8 +44,6 @@ token; the human replaces it.
 | `intent.anchors.configShapes[]` | `<PLANNER_SUGGESTED: list config objects (e.g. OAuthConfig, SupabaseConfig) the contract depends on; empty array if none>` |
 | `scope.requiredPaths[]` | `<PLANNER_SUGGESTED: globs the agent is expected to touch; these must match real files at pre-flight. For migration contracts, supabase/migrations/** goes here, NOT merely in writePaths.>` |
 | `scope.writePaths[]` | `<PLANNER_SUGGESTED: globs the agent may modify; must include all requiredPaths. Default hard-floor + escalated-floor paths are never writable via this field.>` |
-| `scope.validator.policyId` | `<PLANNER_SUGGESTED: validator policy ID, e.g. valesco-platform.v1>` |
-| `scope.validator.policyVersion` | `<PLANNER_SUGGESTED: semver, e.g. 1.0.0>` |
 | `metadata.customer` (Tier 1 only) | `<PLANNER_SUGGESTED: customer identifier, e.g. acme-corp>` |
 | `canaryPlan.metrics[]` (Tier 1 only) | `<PLANNER_SUGGESTED: metrics to watch post-merge, e.g. error_rate, p95_latency>` |
 | `canaryPlan.rollbackTrigger` (Tier 1 only) | `<PLANNER_SUGGESTED: command or Vercel action to execute on rollback>` |
@@ -58,6 +56,8 @@ comments so the human sees they were not derived from the Linear issue.
 | Field | Default | Annotation |
 |---|---|---|
 | `metadata.tier` | `3` | `# PLANNER_SUGGESTED: default; raise to 2/1 per risk` |
+| `scope.validator.policyId` | `"valesco-platform.v1"` | `# PLANNER_SUGGESTED: default; change only if a per-repo policy exists` |
+| `scope.validator.policyVersion` | `"1.0.0"` | `# PLANNER_SUGGESTED: default; bump when the policy repo publishes a new version` |
 | `budget.timeMinutes` | `15` | `# PLANNER_SUGGESTED: Tier 3 default; widen with evidence` |
 | `budget.maxRetries` | `2` | `# PLANNER_SUGGESTED: Tier 3 default` |
 | `budget.maxCommits` | `5` | `# PLANNER_SUGGESTED: Tier 3 default` |
