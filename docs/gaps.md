@@ -17,19 +17,25 @@ Each entry:
 
 ## Open skill gaps
 
-### `/attest`
+### `/attest` — **in progress**
 
 - **Purpose**: Render the attestation checklist from a `.goal-contract.yml`
   and walk the user through tick-through (time-delay acknowledgement,
   protected-path confirmation, cost-estimate acknowledgement, tier-specific
   extras like canary plan on Tier 1). Emits an attestation record that the
-  pre-flight pipeline reads.
-- **Trigger-to-author**: Before the first real contract hits `afk-ready`.
-  Checklist-as-skill is preferable to checklist-in-PR-template because the
-  skill can validate the contract as it renders.
+  afk-ready label handler reads to decide whether to promote the contract.
+- **Status**: Skill + schema authored 2026-04-22. Schema ships via
+  valesco-platform PR [#31](https://github.com/ValescoAgency/valesco-platform/pull/31)
+  (`afk/schemas/attestation-record.v1.json` + 26 AJV tests). Skill files
+  (`attest/SKILL.md`, `checklist.md`, `record-reference.md`) on this PR.
+- **Keying decision**: records keyed by `linearIssueId`, not by canonical
+  `contractHash`. `attestedContentSha` (raw SHA-256 of
+  `.goal-contract.yml` bytes) carries integrity; the label handler
+  re-computes and rejects on drift. Canonical normalization is a
+  separate future concern.
 - **Classification**: skill (the checklist is advisory; the _record_ it
   produces is consumed by pipeline, which is authority).
-- **Tracking**: none yet — file when authoring begins.
+- **Tracking**: [VA-160](https://linear.app/valescoagency/issue/VA-160).
 
 ### `/preflight-report`
 
