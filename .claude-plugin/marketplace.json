@@ -1,0 +1,19 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "valesco",
+  "description": "Valesco-authored Claude Code skills for the AFK autonomous-coding governance pipeline.",
+  "owner": {
+    "name": "Valesco Agency",
+    "email": "jason@valescoagency.com",
+    "url": "https://valescoagency.com"
+  },
+  "plugins": [
+    {
+      "name": "valesco",
+      "description": "Valesco skills bundle: /linear-triage, /draft-contract, /attest. Together they form the upstream pipeline that turns a Linear issue into a goal-contract attestation: triage → Agent Brief → goal-contract draft → attestation record.",
+      "category": "development",
+      "source": ".",
+      "homepage": "https://github.com/ValescoAgency/skills"
+    }
+  ]
+}
