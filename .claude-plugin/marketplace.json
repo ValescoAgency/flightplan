@@ -13,7 +13,7 @@
       "description": "Valesco skills bundle: /linear-triage, /draft-contract, /attest. Together they form the upstream pipeline that turns a Linear issue into a goal-contract attestation: triage → Agent Brief → goal-contract draft → attestation record.",
       "category": "development",
       "source": "./",
-      "homepage": "https://github.com/ValescoAgency/skills"
+      "homepage": "https://github.com/ValescoAgency/flightplan"
     }
   ]
 }
