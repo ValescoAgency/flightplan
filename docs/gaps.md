@@ -1,76 +1,60 @@
 # Gap register
 
 Skills Valesco knows it will need but has not authored yet. Entries are
-registered when the gap first blocks or slows a real run; speculative entries
-are avoided — if it hasn't bitten, it's not here.
+registered when the gap first blocks or slows a real run; speculative
+entries are avoided — if it hasn't bitten, it's not here.
 
 Each entry:
+
 - **Name** — proposed skill name.
 - **Purpose** — one line on what it does.
-- **Trigger-to-author** — condition under which we stop registering and start
-  authoring.
-- **Classification** — `skill` (advisory, user-invoked) or `pipeline` (belongs
-  in `valesco-platform/afk/` instead, registered here only for cross-reference).
+- **Trigger-to-author** — condition under which we stop registering and
+  start authoring.
+- **Classification** — `skill` (advisory, user-invoked) or `pipeline`
+  (belongs in `valesco-platform/afk/` instead, registered here only for
+  cross-reference).
 - **Tracking** — Linear issue if one exists.
 
 ---
 
 ## Open skill gaps
 
-### `/attest` — **in progress**
-
-- **Purpose**: Render the attestation checklist from a `.goal-contract.yml`
-  and walk the user through tick-through (time-delay acknowledgement,
-  protected-path confirmation, cost-estimate acknowledgement, tier-specific
-  extras like canary plan on Tier 1). Emits an attestation record that the
-  afk-ready label handler reads to decide whether to promote the contract.
-- **Status**: Skill + schema authored 2026-04-22. Schema ships via
-  valesco-platform PR [#31](https://github.com/ValescoAgency/valesco-platform/pull/31)
-  (`afk/schemas/attestation-record.v1.json` + 26 AJV tests). Skill files
-  (`attest/SKILL.md`, `checklist.md`, `record-reference.md`) on this PR.
-- **Keying decision**: records keyed by `linearIssueId`, not by canonical
-  `contractHash`. `attestedContentSha` (raw SHA-256 of
-  `.goal-contract.yml` bytes) carries integrity; the label handler
-  re-computes and rejects on drift. Canonical normalization is a
-  separate future concern.
-- **Classification**: skill (the checklist is advisory; the _record_ it
-  produces is consumed by pipeline, which is authority).
-- **Tracking**: [VA-160](https://linear.app/valescoagency/issue/VA-160).
-
 ### `/preflight-report`
 
-- **Purpose**: Render a human-readable summary of a pre-flight run's output
-  (structural checks, churn, Supabase advisors, cost estimate) for quick
-  review before approval. Pipeline already emits structured output; this
-  skill wraps it for chat.
-- **Trigger-to-author**: When raw pre-flight output becomes noisy enough to
-  slow down approvals. Defer until proven.
+- **Purpose**: Render a human-readable summary of a pre-flight run's
+  output (structural checks, churn, Supabase advisors, cost estimate)
+  for quick review before approval. Pipeline already emits structured
+  output; this skill wraps it for chat.
+- **Trigger-to-author**: When raw pre-flight output becomes noisy enough
+  to slow down approvals. Defer until proven.
 - **Classification**: skill.
 - **Tracking**: none yet.
 
-### Anthropic `write-a-skill` variant
+### Linear-native variants of `/to-prd` and `/to-issues`
 
-- **Purpose**: Anthropic publishes a skill authoring skill (likely
-  `anthropic-skills:skill-creator` or the `skill-creator` namespace). Compare
-  against Matt Pocock's `write-a-skill` and pick the better fit for Valesco
-  authoring ergonomics.
-- **Trigger-to-author**: When authoring the first Valesco skill (any of the
-  above). Choose one; don't run both in parallel.
-- **Classification**: decision, not new skill. Log the choice here when made.
-- **Tracking**: none.
+- **Purpose**: Matt's `/to-prd` and `/to-issues` use GitHub by default
+  and route Linear through the "Other" issue-tracker fallback. That
+  works but requires per-invocation freeform-prose configuration. A
+  Valesco-flavored variant would lock in Linear MCP, the VA/MREG/FMF
+  team mapping, and the AFK-eligibility check.
+- **Trigger-to-author**: When the freeform-prose fallback produces drift
+  twice in a row, or when Matt adds first-class Linear support and we
+  want to compose with that instead.
+- **Classification**: skill.
+- **Tracking**: none yet.
 
 ---
 
 ## Cross-reference — pipeline items (not skills)
 
-Registered here so skill work doesn't accidentally take them on. These belong
-in `valesco-platform/afk/`.
+Registered here so skill work doesn't accidentally take them on. These
+belong in `valesco-platform/afk/`.
 
 ### Adversarial pairing runner
 
-- **Purpose**: Runs two agents on the same contract with different prompts /
-  seeds, diffs outputs, flags divergence. Per G1 of the governance plan,
-  runs on every contract.
+- **Purpose**: Runs two agents on the same contract with different
+  prompts / seeds, diffs outputs, flags divergence. Per G1 of the
+  governance plan, runs on every contract.
 - **Why pipeline**: Produces audit records; output is authority-bearing
   (gates `afk-ready` readiness signals).
 - **Tracking**: [VA-157](https://linear.app/valescoagency/issue/VA-157)
@@ -78,43 +62,111 @@ in `valesco-platform/afk/`.
 
 ### Stage-gate enforcer
 
-- **Purpose**: Enforces "cannot apply `afk-ready` label until delay elapsed
-  AND attestation green AND adversarial review green." Per G1 + G8.
+- **Purpose**: Enforces "cannot apply `afk-ready` label until delay
+  elapsed AND attestation green AND adversarial review green." Per G1 +
+  G8.
 - **Why pipeline**: Hash-bound; gates authority transition.
 - **Tracking**: [VA-157](https://linear.app/valescoagency/issue/VA-157)
   (research); implementation ticket TBD.
 
 ### Sequential chain runner
 
-- **Purpose**: Plan → implement → test → review with state handoff between
-  stages. Distinct from Ralph's stateless loop.
+- **Purpose**: Plan → implement → test → review with state handoff
+  between stages. Distinct from Ralph's stateless loop.
 - **Why pipeline**: Consumes + produces `.goal-contract.yml` authority
-  artifacts.
+  artefacts.
 - **Tracking**: [VA-157](https://linear.app/valescoagency/issue/VA-157).
 
 ### Parallel fan-out + merge
 
-- **Purpose**: Split `write_paths` by concern (API / DB / UI / tests), run
-  specialist per lane, merge, re-validate.
-- **Why pipeline**: Merge step is authority-bearing — determines final diff
-  submitted to validator.
+- **Purpose**: Split `write_paths` by concern (API / DB / UI / tests),
+  run specialist per lane, merge, re-validate.
+- **Why pipeline**: Merge step is authority-bearing — determines final
+  diff submitted to validator.
 - **Tracking**: [VA-157](https://linear.app/valescoagency/issue/VA-157).
+
+### Containerized AFK runner (Sandcastle-shaped)
+
+- **Purpose**: Long-running AFK runs in an ephemeral container per Matt
+  Pocock's [sandcastle](https://github.com/mattpocock/sandcastle) shape.
+  Driven from a `ready-for-agent`-tagged Linear issue once attestation
+  is green.
+- **Why pipeline**: Executes the contract's `verification.commands` and
+  produces audit records that flow into the label handler. Hash-bound.
+- **Tracking**: none yet — research item.
 
 ---
 
 ## Closed gaps
 
+### `/diagnose` — shipped 2026-05-01
+
+- **Ships**: `diagnose/SKILL.md`.
+- **Purpose**: Six-phase debugging discipline; Phase 1 is load-bearing
+  (build a deterministic agent-runnable feedback loop). AFK-aware via
+  `.afk/config.yml`; the loop becomes a candidate `verification.commands`
+  entry; the regression test seeds `intent.successCriteria`.
+- **Notes**: Adapts Matt Pocock's
+  [`/diagnose`](https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnose/SKILL.md)
+  with AFK / Linear / contract integration layered on. Defers
+  feedback-loop pattern detail to the sibling `/feedback-loop` skill.
+
+### `/feedback-loop` — shipped 2026-05-01
+
+- **Ships**: `feedback-loop/SKILL.md`.
+- **Purpose**: 10-pattern catalog for constructing deterministic
+  agent-runnable signals (failing test, curl harness, CLI fixture diff,
+  headless browser, replay trace, throwaway harness, property/fuzz,
+  bisection, differential, HITL bash) plus the iteration ladder for
+  hardening any pattern against flakes.
+- **Notes**: Cited from `/diagnose` Phase 1, `/tdd` (Matt's), and
+  `/draft-contract` when authoring `verification.commands`. Tier-1
+  contracts require determinism-or-disqualified per §G10.
+
+### `/brief-to-contract` — shipped 2026-05-01
+
+- **Ships**: `brief-to-contract/SKILL.md`,
+  `brief-to-contract/state-machine.md`.
+- **Purpose**: Orchestration spine — drives a Linear issue from triage
+  through to attested contract by sequentially invoking the right
+  per-stage skills with resume detection, HITL exits, and tier
+  escalation.
+- **Notes**: Writes no authority records itself; never applies
+  `afk-ready` (§G1); never auto-fills tokens (§G8); never renames the
+  draft (§G8). The state machine has 15 detection rules evaluated
+  top-to-bottom; later-stage overrides are refused, earlier-stage
+  overrides require confirmation.
+
+### Anthropic `write-a-skill` variant — closed 2026-05-01
+
+- **Decision**: Use `anthropic-skills:skill-creator`. It's connected,
+  richer (eval loop, description optimization, packaging), and matches
+  the Valesco authoring ergonomics for these orchestration-heavy skills.
+- **Status**: Used to author `/diagnose`, `/feedback-loop`, and
+  `/brief-to-contract` on 2026-05-01.
+- **Notes**: Matt Pocock's `write-a-skill` remains in his productivity
+  bucket; we don't run both in parallel. Revisit if `skill-creator` ever
+  becomes unavailable or if Matt's variant gains specifically-better
+  ergonomics for one-off small skills.
+
+### `/attest` — shipped 2026-04-22
+
+- **Ships**: `attest/SKILL.md`, `attest/checklist.md`,
+  `attest/record-reference.md`.
+- **Tracking**: [VA-160](https://linear.app/valescoagency/issue/VA-160).
+- **Notes**: Schema lives in `valesco-platform`
+  ([VA-160](https://github.com/ValescoAgency/valesco-platform/pull/31)).
+  Records keyed by `linearIssueId`; `attestedContentSha` is raw-bytes
+  sha. The label handler re-computes and rejects on drift.
+
 ### `/draft-contract` — shipped 2026-04-22
 
-- **Ships**: `draft-contract/SKILL.md`, `template.yml`, `authority-fields.md`.
+- **Ships**: `draft-contract/SKILL.md`,
+  `draft-contract/template.yml`,
+  `draft-contract/authority-fields.md`.
 - **Tracking**: [VA-154](https://linear.app/valescoagency/issue/VA-154).
-- **Landed via**: PR [#1](https://github.com/ValescoAgency/skills/pull/1)
-  (initial) + follow-up to strict-validate drafts post-VA-158 merge.
-- **Notes**: Drafts now validate cleanly against
-  `afk/schemas/goal-contract.v1.json` thanks to
-  [VA-158](https://linear.app/valescoagency/issue/VA-158) (approvedAt +
-  contractHash optional at schema level; pre-flight's
-  `structural.metadata-presence` stage enforces presence). Validator
-  policyId / policyVersion emit as defaults with `# PLANNER_SUGGESTED`
-  comments rather than tokens, since string patterns can't hold token
-  strings — matches the tier/budget precedent.
+- **Notes**: Drafts validate cleanly against
+  `afk/schemas/goal-contract.v1.json` post
+  [VA-158](https://linear.app/valescoagency/issue/VA-158).
+  `<PLANNER_SUGGESTED:>` tokens hold the §G8 gate; pre-flight rejects
+  any contract that still contains them.
