@@ -1,0 +1,28 @@
+# Flightplan repo's own AFK configuration.
+#
+# This is the meta-plugin: it ships the skills that drive AFK runs on
+# OTHER Valesco repos. By the same governance reasoning that applies to
+# valesco-platform (§14.3 — control planes cannot rewrite their own
+# policies), this repo is afkEligible: false. AFK contracts that could
+# rewrite /triage or /attest themselves would create a governance
+# self-modification loop.
+#
+# What this means in practice:
+#   - All actionable issues route to ready-for-human, never ready-for-agent
+#   - /draft-contract refuses (no Tier-1/2/3 contract path)
+#   - /triage works fully — issue funnel + Agent Brief / Human Brief comments
+#   - /diagnose, /feedback-loop, Matt's grilling skills all work normally
+#
+# This config also serves as the dogfood validation milestone for the
+# tracker-github adapter (Phase A2). Walking a real flightplan issue
+# through /triage end-to-end against GitHub Issues is the proof that the
+# adapter contract holds beyond Linear.
+
+afkEligible: false        # This repo is a skill-layer control plane
+projectTier: 2            # Internal tooling; informational while afkEligible:false
+tracker: github           # Use the tracker-github adapter (Phase A2)
+
+# trackerLabelsPath:      # Uncomment + populate if this repo's GitHub
+#                         # labels diverge from tracker-github/labels.yml
+#                         # defaults. Today they don't — the repo will
+#                         # use the adapter defaults verbatim.

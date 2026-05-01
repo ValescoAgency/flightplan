@@ -47,8 +47,14 @@ active adapter is selected via `tracker:` in `.afk/config.yml` (default
 | Adapter | Status | Capabilities |
 |---|---|---|
 | [`tracker-linear`](tracker-linear/SKILL.md) | Shipped (default) | Full — customer field, project/cycle membership, team namespace, reliable active-work detection |
-| `tracker-github` | Planned (Phase A2) | Reduced — no customer field, best-effort active-work detection. Triage works end-to-end; full chain through `/draft-contract` waits on Phase B schema migration in `valesco-platform`. |
+| [`tracker-github`](tracker-github/SKILL.md) | Shipped (Phase A2) | Reduced — no customer field, best-effort active-work detection. Triage works end-to-end; full chain through `/draft-contract` waits on Phase B schema migration in `valesco-platform`. |
 | `tracker-jira`, `tracker-local-md` | Deferred | — |
+
+This repo is its own dogfood for the GitHub adapter — see
+[`.afk/config.yml`](.afk/config.yml). `afkEligible: false` (skill-layer
+control plane); `tracker: github`. Walking flightplan issues through
+`/triage` against the `tracker-github` adapter is the validation
+milestone for Phase A2.
 
 These compose with Matt Pocock's
 [engineering skills](https://github.com/mattpocock/skills/tree/main/skills/engineering)
