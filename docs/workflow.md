@@ -1,7 +1,7 @@
 # Workflow — harness engineering + agent orchestration
 
 Reference for how Valesco-authored skills compose with Matt Pocock's
-engineering skills to drive a Linear issue end-to-end through the AFK
+engineering skills to drive a tracker issue end-to-end through the AFK
 pipeline. This is the doctrine the new flightplan skills assume; the
 [starter-set](./starter-set.md) tracks which skills are adopted and the
 [gaps](./gaps.md) doc tracks what's missing.
@@ -21,10 +21,10 @@ idea / conversation / paste
         /to-issues         (Matt — vertical-slice tracer-bullet issues)
         │
         ▼
-   ─── Linear issue exists ───────────────────────────────────────
+   ─── Tracker issue exists ───────────────────────────────────────
         │
         ▼
-   /linear-triage          (Valesco — funnel toward ready-for-agent)
+   /triage                  (Valesco — funnel toward ready-for-agent)
         │
         ├─→ ready-for-human  → HITL exit
         ├─→ needs-info       → wait for reporter
@@ -39,7 +39,7 @@ idea / conversation / paste
         /grill-with-docs    (optional, when domain alignment looks suspect)
                 │
                 ▼
-        /draft-contract     (Valesco — lift Linear → .goal-contract.draft.yml)
+        /draft-contract     (Valesco — lift issue → .goal-contract.draft.yml)
                 │
                 ▼
    ─── HUMAN: replace <PLANNER_SUGGESTED:> tokens, rename to .goal-contract.yml
@@ -55,7 +55,7 @@ idea / conversation / paste
 ```
 
 The orchestration spine, [`/brief-to-contract`](../brief-to-contract/SKILL.md),
-walks an issue from the Linear-issue line through to the attest step. It
+walks an issue from the Tracker-issue line through to the attest step. It
 detects which stage to enter based on existing artefacts and exits cleanly
 on HITL forks.
 
@@ -64,13 +64,13 @@ on HITL forks.
 | Stage | Skill | Source | Purpose |
 |---|---|---|---|
 | Idea → aligned plan | [`/grill-with-docs`](https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md) | Matt | Alignment + locks domain language in `CONTEXT.md` + records ADRs inline |
-| Plan → PRD | [`/to-prd`](https://github.com/mattpocock/skills/blob/main/skills/engineering/to-prd/SKILL.md) | Matt | Synthesizes a PRD from current context; posts to Linear |
+| Plan → PRD | [`/to-prd`](https://github.com/mattpocock/skills/blob/main/skills/engineering/to-prd/SKILL.md) | Matt | Synthesizes a PRD from current context; posts to the tracker |
 | PRD → issues | [`/to-issues`](https://github.com/mattpocock/skills/blob/main/skills/engineering/to-issues/SKILL.md) | Matt | Breaks the PRD into vertical-slice tracer-bullet issues; tags HITL vs AFK |
-| Linear issue → ready-for-agent | [`/linear-triage`](../linear-triage/SKILL.md) | Valesco | Funnel toward `ready-for-agent` with an Agent Brief comment; HITL-aware |
+| Tracker issue → ready-for-agent | [`/triage`](../triage/SKILL.md) | Valesco | Funnel toward `ready-for-agent` with an Agent Brief comment; HITL-aware |
 | Bug needs reproducer | [`/diagnose`](../diagnose/SKILL.md) | Valesco | Six-phase loop; Phase 1 builds the verifier the contract will use |
 | Construct a feedback loop | [`/feedback-loop`](../feedback-loop/SKILL.md) | Valesco | The 10-pattern catalog for deterministic agent-runnable signals |
 | Architecture review | [`/improve-codebase-architecture`](https://github.com/mattpocock/skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md) | Matt | Find deepening opportunities; informed by `CONTEXT.md` + ADRs |
-| Brief → draft contract | [`/draft-contract`](../draft-contract/SKILL.md) | Valesco | Lift Linear issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens |
+| Brief → draft contract | [`/draft-contract`](../draft-contract/SKILL.md) | Valesco | Lift tracker issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens |
 | Draft → attested | [`/attest`](../attest/SKILL.md) | Valesco | Tier-scaled checklist; writes `.afk/attestations/<id>.json` |
 | Whole chain | [`/brief-to-contract`](../brief-to-contract/SKILL.md) | Valesco | Orchestration spine; sequences the above with resume detection + HITL exits |
 | Pre-flight, adversarial review, run, label handler | — | `valesco-platform/afk/` | **Pipeline, not skills.** Authority-bearing, hash-bound, replay-safe. |
@@ -85,7 +85,9 @@ For the workflow to compose cleanly, projects under
 `github.com/ValescoAgency` adopt three conventions:
 
 1. **`.afk/config.yml`** at the repo root. Declares `afkEligible`,
-   `projectTier`, customer (Tier 1), tier expiry. The pipeline reads it;
+   `projectTier`, customer (Tier 1), tier expiry, **`tracker:`** (which
+   adapter to use; default `linear`), and optional
+   `trackerLabelsPath:` for per-repo label overrides. Pipeline reads it;
    skills read it for their own gating.
 2. **`CONTEXT.md`** at the repo root (single-context) or
    **`CONTEXT-MAP.md`** + per-context `CONTEXT.md` (multi-context, e.g.
@@ -99,6 +101,23 @@ These conventions are new as of 2026-05-01. Existing repos backfill on
 first use — `/grill-with-docs` creates `CONTEXT.md` lazily when the first
 term is resolved, and creates `docs/adr/` lazily when the first ADR is
 needed.
+
+## Tracker adapters
+
+The "context layer" — issue body, comments, labels, status — is a
+**modular component**. The active adapter is loaded at session start
+based on `.afk/config.yml`'s `tracker:` field. Consumer skills speak
+only canonical names; the adapter translates to vendor-native form.
+
+| Adapter | Status | Notes |
+|---|---|---|
+| [`tracker-linear`](../tracker-linear/SKILL.md) | Default, shipped | Full capability set — `customer_field`, `team_namespace`, reliable active-work detection. |
+| `tracker-github` | Planned (Phase A2) | Triage-end-to-end works; full chain through `/draft-contract` blocked on Phase B schema migration in `valesco-platform`. |
+| `tracker-jira`, `tracker-local-md` | Deferred | — |
+
+The contract that defines the adapter API is
+[ADR-0001](./adr/0001-tracker-adapter-contract.md). The phased rollout
+is in [refactor-plan.md](./refactor-plan.md).
 
 ## CONTEXT.md — Ubiquitous Language
 
@@ -214,7 +233,7 @@ The boundary that gives this workflow its safety properties.
 
 - Can read any file.
 - Can call other skills.
-- Can post Linear comments (with the AI disclaimer).
+- Can post tracker comments via the active adapter (with the AI disclaimer).
 - Can write *user-territory* files: tests, scripts in `scripts/debug/`,
   `CONTEXT.md`, `docs/adr/`, the goal-contract draft, the attestation
   record.

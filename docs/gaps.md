@@ -43,6 +43,30 @@ Each entry:
 - **Classification**: skill.
 - **Tracking**: none yet.
 
+### `tracker-github` adapter (Phase A2)
+
+- **Purpose**: GitHub Issues adapter implementing the
+  [tracker contract](./adr/0001-tracker-adapter-contract.md). Free
+  alternative for low-priority projects. Reduced capabilities — no
+  `customer_field`, `team_namespace: false`,
+  `active_work_detection: best-effort`.
+- **Trigger-to-author**: When a real low-priority project needs
+  `/triage` against GitHub Issues. Don't ship preemptively.
+- **Classification**: skill.
+- **Tracking**: none yet. See
+  [`refactor-plan.md`](./refactor-plan.md#phase-a2--tracker-github-proof-of-concept).
+- **Constraint**: full chain (`/draft-contract` and downstream) blocks
+  on Phase B schema migration in `valesco-platform`. Triage works
+  end-to-end independently.
+
+### `tracker-jira` and `tracker-local-md` adapters
+
+- **Purpose**: Same contract; cover Jira workflows and local-markdown
+  issue tracking respectively.
+- **Trigger-to-author**: Real demand. Speculative today.
+- **Classification**: skill.
+- **Tracking**: none.
+
 ---
 
 ## Cross-reference — pipeline items (not skills)
@@ -89,15 +113,46 @@ belong in `valesco-platform/afk/`.
 
 - **Purpose**: Long-running AFK runs in an ephemeral container per Matt
   Pocock's [sandcastle](https://github.com/mattpocock/sandcastle) shape.
-  Driven from a `ready-for-agent`-tagged Linear issue once attestation
+  Driven from a `ready-for-agent`-tagged tracker issue once attestation
   is green.
 - **Why pipeline**: Executes the contract's `verification.commands` and
   produces audit records that flow into the label handler. Hash-bound.
 - **Tracking**: none yet — research item.
 
+### Schema v2: `linearIssueId` → `trackerIssueId` (Phase B)
+
+- **Purpose**: Rename `metadata.linearIssueId` → `metadata.trackerIssueId`
+  in `goal-contract.v1.json` and `attestation-record.v1.json`; broaden
+  the ID regex from `^[A-Z]{2,6}-\d+$` to also accept GitHub-style
+  `owner/repo#NNN` and arbitrary string IDs that satisfy a length floor.
+  Update label handler to read v2. Migrate any in-flight records.
+- **Why pipeline**: Schema authority + label handler logic.
+- **Trigger**: Real demand for AFK chains on non-Linear repos. Don't
+  ship preemptively — the migration cost is real, and it's
+  governance-bound. See
+  [`refactor-plan.md`](./refactor-plan.md#phase-b--schema-v2-in-valesco-platform).
+- **Tracking**: TBD — open in `valesco-platform` when needed.
+- **Phase A3 cleanup**: once Phase B lands, sweep skills to use the new
+  field name (`attest`'s filename pattern, `state-machine.md` rules,
+  prose).
+
 ---
 
 ## Closed gaps
+
+### Tracker adapter contract — shipped 2026-05-01
+
+- **Ships**: `tracker-linear/SKILL.md`, `tracker-linear/labels.yml`;
+  rename `linear-triage/` → `triage/` with vendor-agnostic refactor;
+  consumer skills (`draft-contract`, `diagnose`, `brief-to-contract`)
+  refactored to speak the adapter contract.
+- **Tracking**: PR #6 (docs: ADR-0001 + CONTEXT.md + refactor plan),
+  PR A1 (this PR — implementation).
+- **Notes**: Phase A1 of the rollout in
+  [`refactor-plan.md`](./refactor-plan.md). Phase A2 (`tracker-github`)
+  registered above; Phase B (schema migration) registered above.
+  Capabilities baseline: `customer_field`, `project_membership`,
+  `cycle_membership`, `team_namespace`, `active_work_detection`.
 
 ### `/diagnose` — shipped 2026-05-01
 

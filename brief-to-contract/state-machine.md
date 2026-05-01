@@ -2,7 +2,7 @@
 
 Detail for [`SKILL.md`](./SKILL.md). The orchestration spine has eight
 stages and is **idempotent on each invocation** — re-running the skill
-on the same Linear issue should land at the right stage, never redo
+on the same tracker issue should land at the right stage, never redo
 work, and refuse to advance through a structural gate.
 
 The detection rules below are evaluated **top-to-bottom on every
@@ -14,21 +14,21 @@ Read in order. Stop at the first match.
 
 | # | Detection signal | Entry | Confirmation prompt |
 |---|---|---|---|
-| 1 | `.afk/config.yml` is missing OR `afkEligible: false` | Refuse | "This repo is a control plane (or unlinked). Routing to `/linear-triage` for `ready-for-human`." |
+| 1 | `.afk/config.yml` is missing OR `afkEligible: false` | Refuse | "This repo is a control plane (or unlinked). Routing to `/triage` for `ready-for-human`." |
 | 2 | `.afk/attestations/<linearIssueId>.json` exists AND its `attestedContentSha` matches `sha256:` + sha256 of current `.goal-contract.yml` bytes | Stage 8 | "Already attested for `<TEAM-NNN>`. Sha matches. Printing hand-off — confirm OK?" |
 | 3 | `.afk/attestations/<linearIssueId>.json` exists BUT sha does not match current YAML | Stage 7 | "Attestation exists but the YAML drifted (sha mismatch). I will re-attest. Confirm OK?" |
 | 4 | `.goal-contract.yml` exists, no `<PLANNER_SUGGESTED:>` tokens, no attestation record | Stage 7 | "Contract authored, ready for attestation. Entering /attest. Confirm OK?" |
 | 5 | `.goal-contract.yml` exists AND any `<PLANNER_SUGGESTED:>` tokens remain | Refuse | "Contract has unreplaced tokens at lines `<list>`. Replace them, then re-run me. I will not auto-fill." |
 | 6 | Both `.goal-contract.yml` AND `.goal-contract.draft.yml` exist | Refuse | "Both files exist — that's a dangerous state. Pick one: keep the draft and delete the final, or vice versa. Then re-run." |
 | 7 | `.goal-contract.draft.yml` exists, no `.goal-contract.yml` | Stage 5 | "Draft in place. Listing unreplaced tokens for you to address. Confirm OK?" |
-| 8 | Linear issue is `In Progress` / `In Review` / `Reviewed` | Read-only | "Issue is in active work. This skill is read-only on those statuses. Showing current state only." |
-| 9 | Linear issue is `Done` / `Canceled` / `Duplicate` | Read-only | "Issue is closed (`<status>`). Nothing for the chain to do. Showing the resolution." |
-| 10 | Linear issue is `Backlog` | Read-only | "Issue parked in Backlog. Re-triage it via `/linear-triage` to bring it back into the funnel before running me." |
-| 11 | Linear issue is `Todo` AND has `ready-for-human` label | Read-only HITL | "This issue is HITL — work it manually, not through AFK. Showing the human-brief from the triage comment." |
-| 12 | Linear issue is `Todo` AND has `ready-for-agent` label AND has an Agent Brief comment AND category is `Bug` AND brief lacks captured reproducer (per Stage 2 detection) | Stage 2 | "Brief in place but no captured reproducer. Entering `/diagnose`. Confirm OK?" |
-| 13 | Linear issue is `Todo` AND has `ready-for-agent` AND has Agent Brief AND (category is not `Bug` OR reproducer is captured) AND domain alignment looks suspect (per Stage 3 heuristics) | Stage 3 | "Brief in place; one or more domain terms / decisions need locking down. Entering `/grill-with-docs`. Confirm OK or skip?" |
-| 14 | Linear issue is `Todo` AND has `ready-for-agent` AND has Agent Brief AND nothing further is needed pre-draft | Stage 4 | "Brief is solid. Entering `/draft-contract`. Confirm tier recommendation: `<tier>` (`<reason>`)." |
-| 15 | Linear issue is `Triage` or `needs-info` (any other shape) | Stage 1 | "Issue not yet brief-ready. Entering `/linear-triage`. Confirm OK?" |
+| 8 | issue status is `in-progress` / `In Review` / `Reviewed` | Read-only | "Issue is in active work. This skill is read-only on those statuses. Showing current state only." |
+| 9 | issue status is `done` / `Canceled` / `Duplicate` | Read-only | "Issue is closed (`<status>`). Nothing for the chain to do. Showing the resolution." |
+| 10 | issue status is `backlog` | Read-only | "Issue parked in Backlog. Re-triage it via `/triage` to bring it back into the funnel before running me." |
+| 11 | issue status is `todo` AND has `ready-for-human` label | Read-only HITL | "This issue is HITL — work it manually, not through AFK. Showing the human-brief from the triage comment." |
+| 12 | issue status is `todo` AND has `ready-for-agent` label AND has an Agent Brief comment AND category is `Bug` AND brief lacks captured reproducer (per Stage 2 detection) | Stage 2 | "Brief in place but no captured reproducer. Entering `/diagnose`. Confirm OK?" |
+| 13 | issue status is `todo` AND has `ready-for-agent` AND has Agent Brief AND (category is not `Bug` OR reproducer is captured) AND domain alignment looks suspect (per Stage 3 heuristics) | Stage 3 | "Brief in place; one or more domain terms / decisions need locking down. Entering `/grill-with-docs`. Confirm OK or skip?" |
+| 14 | issue status is `todo` AND has `ready-for-agent` AND has Agent Brief AND nothing further is needed pre-draft | Stage 4 | "Brief is solid. Entering `/draft-contract`. Confirm tier recommendation: `<tier>` (`<reason>`)." |
+| 15 | issue status is `triage` or `needs-info` (any other shape) | Stage 1 | "Issue not yet brief-ready. Entering `/triage`. Confirm OK?" |
 
 If none of the above matches, refuse and surface the issue's current
 labels + status — something unexpected is going on, and the user should
@@ -79,7 +79,7 @@ those statuses, print the current state in a single block:
 
 ```
 <TEAM-NNN> "<title>"
-  status: <Linear status>
+  status: <canonical status>
   labels: <comma-separated>
   category: <Bug|Feature|Improvement>
   state:    <ready-for-agent|ready-for-human|needs-info|none>
@@ -136,10 +136,10 @@ Tier reasoning the prompt should always cite:
 
 | Tier 1 reason | Source |
 |---|---|
-| `customer` field set on the issue | Linear API |
+| `customer` field set on the issue | active tracker adapter |
 | Project itself is Tier 1 in `.afk/config.yml` | Pre-flight |
 | Likely `writePaths` touch `**/auth/**`, `**/billing/**`, `**/migrations/**`, `supabase/migrations/**`, `src/**/payment*` | Brief inference |
-| Issue body mentions "production", "client-critical", an incident ID | Linear body parse |
+| Issue body mentions "production", "client-critical", an incident ID | issue body parse |
 
 Single hit → escalate and ask. Multiple hits → escalate and ask, with
 all reasons listed.

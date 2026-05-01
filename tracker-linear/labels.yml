@@ -1,0 +1,38 @@
+# Linear adapter — default label mapping for Valesco repos.
+#
+# Format: <canonical name>: <vendor-native string>
+#
+# Valesco's Linear workspace uses canonical names directly, so most
+# entries are identity. Per-repo overrides land at
+# `.afk/tracker-labels.yml` if a specific repo has nonstandard strings.
+#
+# See ../docs/adr/0001-tracker-adapter-contract.md for the three-layer
+# resolution rule (canonical → adapter default → per-repo override).
+
+# Category labels — every actively-triaged issue has exactly one.
+categories:
+  Bug: Bug
+  Feature: Feature
+  Improvement: Improvement
+
+# State labels — at most one per issue.
+state_labels:
+  needs-info: needs-info
+  ready-for-agent: ready-for-agent
+  ready-for-human: ready-for-human
+  wontfix: wontfix
+  needs-triage: needs-triage  # rarely used in Linear; status `Triage` covers most cases
+
+# Status mapping — canonical → Linear-native status name.
+# Linear resolves names to `stateId` per team; the adapter caches these
+# during a session (see SKILL.md "Status mapping" section).
+statuses:
+  triage: Triage
+  backlog: Backlog
+  todo: Todo
+  in-progress: In Progress
+  in-review: In Review
+  reviewed: Reviewed
+  done: Done
+  canceled: Canceled
+  duplicate: Duplicate

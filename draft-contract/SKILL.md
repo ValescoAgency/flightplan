@@ -1,23 +1,31 @@
 ---
 name: draft-contract
-description: Lift a Linear issue into .goal-contract.draft.yml for the Valesco AFK pipeline. Use when the user says "draft a contract for VA-NNN", "goal contract for this ticket", "turn this Linear issue into a draft contract", or similar. Produces a structurally non-executable draft — authority fields emit as <PLANNER_SUGGESTED:> tokens per governance plan G8.
+description: Lift a tracker issue into .goal-contract.draft.yml for the Valesco AFK pipeline. Vendor-agnostic — reads the issue through the active tracker adapter (Linear today; GitHub Issues planned). Use when the user says "draft a contract for VA-NNN" (or `owner/repo#42`), "goal contract for this ticket", "turn this issue into a draft contract", or similar. Produces a structurally non-executable draft — authority fields emit as <PLANNER_SUGGESTED:> tokens per governance plan G8.
 ---
 
 # /draft-contract
 
-Author the first-pass `.goal-contract.draft.yml` for an AFK run, sourced from
-a Linear issue. The draft is **intentionally non-executable**: every
-authority-bearing field that cannot be mechanically derived is emitted as a
-`<PLANNER_SUGGESTED: …>` token. A human replaces tokens, renames the file to
-`.goal-contract.yml`, and only then is it eligible for pre-flight per G8.
+Author the first-pass `.goal-contract.draft.yml` for an AFK run, sourced
+from an issue in the active tracker. The draft is **intentionally
+non-executable**: every authority-bearing field that cannot be
+mechanically derived is emitted as a `<PLANNER_SUGGESTED: …>` token. A
+human replaces tokens, renames the file to `.goal-contract.yml`, and
+only then is it eligible for pre-flight per G8.
 
 ## Inputs
 
-- **Required:** a Linear issue identifier in `TEAM-NNN` form (e.g., `VA-142`).
-  Passed as the skill argument or inferred from the conversation when the user
-  pasted a Linear URL.
-- **Optional:** a target directory. Defaults to the current working directory
-  (repo root).
+- **Required:** a tracker issue identifier whose format depends on the
+  active adapter (Linear: `TEAM-NNN` like `VA-142`; GitHub:
+  `owner/repo#NNN`). Passed as the skill argument or inferred from the
+  conversation when the user pastes a tracker URL.
+- **Optional:** a target directory. Defaults to the current working
+  directory (repo root).
+
+The active tracker is resolved at session start by reading
+`.afk/config.yml`'s `tracker:` field — see
+[`../triage/SKILL.md`](../triage/SKILL.md) for the resolution rules,
+[`../tracker-linear/SKILL.md`](../tracker-linear/SKILL.md) for the
+default adapter.
 
 ## Preconditions — check before writing anything
 
@@ -33,23 +41,25 @@ authority-bearing field that cannot be mechanically derived is emitted as a
 3. **Existing draft check.** If `.goal-contract.draft.yml` already exists,
    ask the user whether to overwrite or append a numbered suffix
    (`.goal-contract.draft.2.yml`).
-4. **Linear MCP check.** The Linear MCP tool must be available. If not,
-   print a single-line error and stop — do not fall back to asking the user
-   to paste the issue body.
+4. **Adapter availability check.** The active tracker adapter must be
+   loadable, and its `fetch_issue` operation must work. If not, print a
+   single-line error and stop — do not fall back to asking the user to
+   paste the issue body.
 
 ## Process
 
-### Step 1 — fetch the Linear issue
+### Step 1 — fetch the issue via the active tracker adapter
 
-Use the Linear MCP (`get_issue` by ID) to fetch:
+Call `fetch_issue(<id>)` on the active adapter to retrieve:
+
 - Title
 - Description (markdown body)
 - URL
-- Status
-- Labels
+- Status (canonical)
+- Labels (canonical, with non-canonical extras preserved)
 - Linked attachments / URLs
 
-Fail loudly if the issue status is `Cancelled` or `Done` — drafts for
+Fail loudly if the issue status is `canceled` or `done` — drafts for
 closed issues are almost certainly a mistake.
 
 ### Step 2 — extract intent
@@ -57,18 +67,18 @@ closed issues are almost certainly a mistake.
 See [`authority-fields.md`](./authority-fields.md) for the full field list.
 Short version:
 
-| Contract field | Source in Linear issue |
+| Contract field | Source in issue body |
 |---|---|
 | `intent.description` | First paragraph before any `##` header. Fallback: whole body truncated to ~500 chars. Minimum 20 chars per schema. |
 | `intent.successCriteria` | Bullets under `## Acceptance`, `## Success criteria`, `## Test plan`. Lift each bullet as-is; strip trailing punctuation. |
 | `intent.nonGoals` | Bullets under `## Non-goals`, `## Out of scope`. |
 | `intent.anchors.docs[]` | URLs in the issue body that point at `.md`, `docs/`, ADR/PRD paths, or external doc hosts (Notion, Sanity, Obsidian). For each, compute a sha256 of the URL string itself as the `versionHash` placeholder — pre-flight will replace it with content hash. |
-| `metadata.linearIssueId` | The TEAM-NNN identifier. |
+| `metadata.linearIssueId` | The tracker's canonical issue identifier — the adapter returns whatever the vendor's native form is. **Schema field name is unchanged in this rollout** (still `linearIssueId`); the active Linear adapter populates it with `TEAM-NNN`. The GitHub adapter (when authored) cannot use this field until the Phase B v2 schema migration in `valesco-platform` lands — see [`../docs/refactor-plan.md`](../docs/refactor-plan.md). |
 | `metadata.created` | Current timestamp, ISO 8601. |
 
-If a section source is **missing** from the Linear body, do not leave the
-field empty — emit a `<PLANNER_SUGGESTED:>` token describing what's expected.
-The skill must never silently drop an authority field.
+If a section source is **missing** from the issue body, do not leave the
+field empty — emit a `<PLANNER_SUGGESTED:>` token describing what's
+expected. The skill must never silently drop an authority field.
 
 ### Step 3 — fill the template
 
@@ -114,7 +124,7 @@ After writing, print a concise next-steps block:
 
 ```
 Draft written: .goal-contract.draft.yml
-Linked Linear: VA-NNN  ("<issue title>")
+Linked issue: <id>  ("<issue title>")     # adapter-formatted ID
 
 Next:
   1. Review + replace every <PLANNER_SUGGESTED: …> token.
@@ -123,7 +133,7 @@ Next:
   3. For Tier 1: author the canaryPlan block (metrics, thresholds,
      rollbackTrigger, windowMinutes).
   4. Rename to .goal-contract.yml ONLY when every token is replaced.
-  5. Open the scope PR with "Fixes VA-NNN" in the body.
+  5. Open the scope PR with "Fixes <id>" in the body.
   6. Wait for the delay window (15/30/60 min by tier + sensitivity).
   7. Apply the afk-ready label to trigger pre-flight.
 
@@ -137,6 +147,9 @@ Before printing the next-steps block, verify:
 
 - [ ] The written YAML parses.
 - [ ] `metadata.linearIssueId` matches the pattern `^[A-Z]{2,6}-\d+$`.
+      *(Until Phase B schema migration: this means the active adapter
+      must be Linear. GitHub adapter callers will fail this check; that
+      gap is registered in [`../docs/refactor-plan.md`](../docs/refactor-plan.md).)*
 - [ ] Every field listed in [`authority-fields.md`](./authority-fields.md) as
       "token-required when not derivable" is either a real value or contains
       the literal string `<PLANNER_SUGGESTED:`.
@@ -152,11 +165,20 @@ not leave a malformed draft on disk.
 - **No codebase inspection to infer `writePaths`.** Authority fields are
   human-authored per G8 — an agent guessing paths would violate the rule
   the skill exists to enforce.
-- **No Linear status transitions.** Fetching is read-only.
+- **No tracker status transitions.** Fetching is read-only — the adapter's
+  read operations are the only ones used here.
 - **No scope PR creation.** Separate operation; out of scope for this skill.
 
 ## References
 
+- [`../triage/SKILL.md`](../triage/SKILL.md) — upstream skill (Agent Brief
+  is the source of intent for this draft).
+- [`../tracker-linear/SKILL.md`](../tracker-linear/SKILL.md) — current
+  default adapter; provides `fetch_issue`.
+- [`../docs/adr/0001-tracker-adapter-contract.md`](../docs/adr/0001-tracker-adapter-contract.md)
+  — adapter contract design.
+- [`../docs/refactor-plan.md`](../docs/refactor-plan.md) — Phase B
+  blocker explanation for non-Linear adapters.
 - `valesco-platform/docs/afk/governance-plan.md` §G8 (planner → main handoff)
 - `valesco-platform/docs/afk/intake.md` (full intake flow context)
 - `valesco-platform/afk/schemas/goal-contract.v1.json` (draft must validate
