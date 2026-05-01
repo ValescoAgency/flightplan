@@ -1,7 +1,7 @@
 {
   "name": "valesco",
-  "version": "0.1.0",
-  "description": "Valesco-authored Claude Code skills for the AFK autonomous-coding governance pipeline. Bundles user-invoked, advisory skills only — pipeline code (validators, pre-flight, audit) lives in valesco-platform per the skills-vs-pipeline rule.",
+  "version": "0.2.0",
+  "description": "Valesco-authored Claude Code skills for harness engineering and agent orchestration around the AFK autonomous-coding governance pipeline. Bundles the orchestration spine (/brief-to-contract), harness skills (/diagnose, /feedback-loop), Linear funnel (/linear-triage), goal-contract drafting (/draft-contract), and tier-scaled attestation (/attest). User-invoked, advisory skills only — pipeline code (validators, pre-flight, audit, label handler) lives in valesco-platform per the skills-vs-pipeline rule.",
   "author": {
     "name": "Valesco Agency",
     "email": "jason@valescoagency.com",
@@ -15,6 +15,11 @@
     "afk",
     "governance",
     "linear",
-    "goal-contract"
+    "goal-contract",
+    "harness-engineering",
+    "agent-orchestration",
+    "diagnose",
+    "feedback-loop",
+    "brief-to-contract"
   ]
 }
