@@ -1,6 +1,6 @@
 ---
 name: tracker-linear
-description: Linear adapter for flightplan's tracker contract. Implements the canonical operations API (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`, `set_status`) by delegating to the Linear MCP. Loaded by consumer skills (`/triage`, `/draft-contract`, `/brief-to-contract`, `/diagnose`) when `.afk/config.yml` declares `tracker: linear` (the default). Not invoked directly by users — this is the adapter the rest of flightplan reads from.
+description: 'Linear adapter for flightplan''s tracker contract. Implements the canonical operations API (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`, `set_status`) by delegating to the Linear MCP. Loaded by consumer skills (`/triage`, `/draft-contract`, `/brief-to-contract`, `/diagnose`) when `.afk/config.yml` declares `tracker: linear` (the default). Not invoked directly by users — this is the adapter the rest of flightplan reads from.'
 disable-model-invocation: true
 ---
 
