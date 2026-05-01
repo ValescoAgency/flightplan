@@ -1,6 +1,6 @@
 # Writing Agent Briefs
 
-An **Agent Brief** is the comment posted on a Linear issue when it transitions to `ready-for-agent`. It is the **input** the AFK pre-flight reads to derive a goal-contract. The original issue body is context; the Agent Brief is the contract source-of-truth.
+An **Agent Brief** is the comment posted on a tracker issue when it transitions to `ready-for-agent`. It is the **input** the AFK pre-flight reads to derive a goal-contract. The original issue body is context; the Agent Brief is the contract source-of-truth.
 
 Pre-flight will reject a contract whose source brief is vague. So this format isn't decorative — every section maps to a goal-contract field that pre-flight checks.
 

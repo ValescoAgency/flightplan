@@ -41,7 +41,7 @@ storytelling. Build the loop.
 - Inside `/tdd`, when picking the seam for the first failing test in a new
   feature slice.
 - Inside `/draft-contract`, when the contract needs a `verification.commands`
-  entry and the source Linear issue doesn't yet specify one.
+  entry and the source tracker issue doesn't yet specify one.
 - Standalone, when the user says "the dev loop is too slow" — the
   iteration ladder applies even when no specific bug is on the table.
 
@@ -51,7 +51,7 @@ storytelling. Build the loop.
 - The "loop" the user wants is a manual checklist for stakeholders. That's
   a runbook, not a feedback loop.
 - The bug only matters in production with real customer data. First run
-  `/linear-triage` to determine whether you have legitimate access to a
+  `/triage` to determine whether you have legitimate access to a
   reproducer; this skill cannot manufacture one out of nothing.
 
 ## Pre-flight — read AFK context
@@ -371,7 +371,7 @@ Walk this tree top-to-bottom. Stop at the first "yes."
     `verification.commands` reference.
 
 If you fall off the bottom of the tree without a fit, the bug isn't
-loopable yet — return to `/linear-triage` and request reproducer access,
+loopable yet — return to `/triage` and request reproducer access,
 trace capture, or production instrumentation as `needs-info`.
 
 ## Iteration ladder

@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: Disciplined diagnosis loop for hard bugs and performance regressions inside the Valesco AFK pipeline. Reproduce → hypothesise → instrument → fix → regression-test, with Phase 1 (build a feedback loop) load-bearing. Use when the user says "diagnose this", "debug this", "reproduce this bug", "this is throwing/failing/broken in prod", "why is this slow", or describes a performance regression. Distinct from `/linear-triage` (which decides whether a bug has enough information to be tractable at all) and `/draft-contract` (which lifts an already-diagnosed issue into a goal-contract). Run this AFTER triage has confirmed the issue is real, BEFORE drafting a contract — the feedback loop you build here is a candidate verifier for the contract's `verification.commands`, and the regression test you write seeds `intent.successCriteria`.
+description: Disciplined diagnosis loop for hard bugs and performance regressions inside the Valesco AFK pipeline. Reproduce → hypothesise → instrument → fix → regression-test, with Phase 1 (build a feedback loop) load-bearing. Use when the user says "diagnose this", "debug this", "reproduce this bug", "this is throwing/failing/broken in prod", "why is this slow", or describes a performance regression. Distinct from `/triage` (which decides whether a bug has enough information to be tractable at all) and `/draft-contract` (which lifts an already-diagnosed issue into a goal-contract). Run this AFTER triage has confirmed the issue is real, BEFORE drafting a contract — the feedback loop you build here is a candidate verifier for the contract's `verification.commands`, and the regression test you write seeds `intent.successCriteria`.
 ---
 
 # /diagnose
@@ -15,7 +15,7 @@ feed the next skill in the chain — see [§ Outputs](#outputs-that-flow-downstr
 
 ## When to run
 
-After [`/linear-triage`](../linear-triage/SKILL.md) has classified the issue
+After [`/triage`](../triage/SKILL.md) has classified the issue
 as a `Bug` with enough detail to attempt reproduction, but **before**
 [`/draft-contract`](../draft-contract/SKILL.md) lifts it into
 `.goal-contract.draft.yml`. A contract drafted from an undiagnosed bug almost
@@ -29,7 +29,7 @@ it to a contract. The phases still apply.
 ## When NOT to run
 
 - The reporter's body lacks reproduction steps and the code path is unclear
-  → run [`/linear-triage`](../linear-triage/SKILL.md) and post `needs-info`
+  → run [`/triage`](../triage/SKILL.md) and post `needs-info`
   with specific questions instead.
 - The bug is already reproducing in CI — Phase 1 is mostly free; jump to
   Phase 3.
@@ -122,7 +122,7 @@ Stop. Do **not** proceed to hypothesise. Output:
 >       timestamps),
 >   (c) permission to add temporary production instrumentation.
 >
-> Recommend handing back to `/linear-triage` to apply `needs-info` with these
+> Recommend handing back to `/triage` to apply `needs-info` with these
 > as the specific blockers.
 
 This is the right answer. Hypothesising without a loop produces plausible
@@ -235,14 +235,14 @@ result of a real trade-off.
 
 The whole point of doing this before contract drafting is that the artefacts
 have downstream consumers. After Phase 6, hand the user a structured summary
-they can paste into Linear or feed to the next skill.
+they can paste into the tracker comment or feed to the next skill.
 
 | Artefact from this run | Where it goes next |
 |---|---|
 | The Phase 1 feedback loop (script / test / harness) | Becomes a candidate `verification.commands` entry in the goal-contract — the AFK run will execute it and pre-flight requires it to be deterministic. Reference it explicitly when invoking `/draft-contract`. |
 | The Phase 5 regression test | Seeds an `intent.successCriteria` bullet — phrase it as "When `<scenario>`, the system produces `<observation>`" so it round-trips through the schema's ≥ 5-char testable rule. |
-| The hypothesis that turned out correct | Goes in the Linear comment / PR description as the post-mortem one-liner. |
-| Architectural finding (no good seam, etc.) | Open a separate Linear issue tagged `Improvement` and route through `/to-issues` → `/linear-triage`. Do **not** bundle architectural work into the bug-fix contract. |
+| The hypothesis that turned out correct | Goes in the tracker comment / PR description as the post-mortem one-liner. |
+| Architectural finding (no good seam, etc.) | Open a separate tracker issue tagged `Improvement` and route through `/to-issues` → `/triage`. Do **not** bundle architectural work into the bug-fix contract. |
 | New domain term encountered | Update [`CONTEXT.md`](../docs/workflow.md#contextmd--ubiquitous-language) right there — same discipline as `/grill-with-docs`. Lazy-create the file if it doesn't exist. |
 
 If `afkEligible: false`, the first two rows do not apply — feed straight to
@@ -250,7 +250,7 @@ a human PR instead.
 
 ## AI disclaimer
 
-When this skill posts a comment to Linear (e.g. summarising the diagnosis
+when this skill posts a comment to the active tracker (e.g. summarising the diagnosis
 for a Bug issue before handing back to triage), the comment **must** start
 with this disclaimer on its own line, before any other content:
 
@@ -268,8 +268,8 @@ their own provenance via git history.
   this skill never writes `.goal-contract*.yml`.
 - **No attestation.** Diagnosis is upstream of attestation — see
   [`/attest`](../attest/SKILL.md).
-- **No label transitions.** Status / label moves on Linear are
-  [`/linear-triage`](../linear-triage/SKILL.md)'s job. This skill may
+- **No label transitions.** Status / label moves on the active tracker are
+  [`/triage`](../triage/SKILL.md)'s job. This skill may
   *recommend* a transition (e.g. "looks ready for `/draft-contract`") but
   applies nothing itself.
 - **No production instrumentation without explicit user approval.** Phase 4
@@ -281,7 +281,7 @@ their own provenance via git history.
 
 ## References
 
-- [`../linear-triage/SKILL.md`](../linear-triage/SKILL.md) — upstream
+- [`../triage/SKILL.md`](../triage/SKILL.md) — upstream
   (decides whether a bug is even tractable).
 - [`../feedback-loop/SKILL.md`](../feedback-loop/SKILL.md) — sibling
   reference on constructing loops; pattern detail for the ten approaches in
@@ -291,7 +291,7 @@ their own provenance via git history.
 - [`../attest/SKILL.md`](../attest/SKILL.md) — gates the contract.
 - [Matt Pocock's `diagnose`](https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnose/SKILL.md)
   — upstream inspiration for the six-phase loop. The phases here are the
-  same; the AFK / Linear / contract integration is what's added.
+  same; the AFK / tracker / contract integration is what's added.
 - `valesco-platform/docs/afk/governance-plan.md` §G8 (planner → main handoff
   — why a contract drafted from an undiagnosed bug is structurally weak).
 - `valesco-platform/docs/afk/governance-plan.md` §G10 (Tier-1 verifier

@@ -14,17 +14,30 @@ to pipeline code at `valesco-platform/afk/` and drops off this list.
 
 ## Adopted — flightplan-owned (Valesco)
 
-These ship in this plugin. AFK-aware; opinionated about Linear, Linear
-team mapping, and the goal-contract pipeline.
+These ship in this plugin. AFK-aware; vendor-agnostic via the tracker
+adapter contract ([ADR-0001](./adr/0001-tracker-adapter-contract.md)).
+
+### Consumer skills
 
 | Skill | Use case |
 |---|---|
-| [`/linear-triage`](../linear-triage/SKILL.md) | Funnel Linear issues toward `ready-for-agent` with an Agent Brief comment. AFK-eligibility-aware via `.afk/config.yml`. |
+| [`/triage`](../triage/SKILL.md) | Funnel issues toward `ready-for-agent` with an Agent Brief comment. **Vendor-agnostic** — uses the active tracker adapter. AFK-eligibility-aware via `.afk/config.yml`. *(Renamed from `/linear-triage` in 0.3.0.)* |
 | [`/diagnose`](../diagnose/SKILL.md) | Six-phase debugging discipline; Phase 1 builds the verifier the contract will use. AFK-aware tier handling. |
 | [`/feedback-loop`](../feedback-loop/SKILL.md) | The 10-pattern catalog for constructing deterministic agent-runnable signals. Cited by `/diagnose`, `/draft-contract`, and Matt's `/tdd`. |
-| [`/draft-contract`](../draft-contract/SKILL.md) | Lift a Linear issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens (G8 gate). |
+| [`/draft-contract`](../draft-contract/SKILL.md) | Lift a tracker issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens (G8 gate). |
 | [`/attest`](../attest/SKILL.md) | Tier-scaled attestation checklist; writes `.afk/attestations/<id>.json` (the label handler reads it). |
-| [`/brief-to-contract`](../brief-to-contract/SKILL.md) | Orchestration spine — drives a Linear issue through the chain to attested contract with resume detection + HITL exits. |
+| [`/brief-to-contract`](../brief-to-contract/SKILL.md) | Orchestration spine — drives an issue through the chain to attested contract with resume detection + HITL exits. |
+
+### Tracker adapters
+
+Loaded automatically by consumer skills based on `.afk/config.yml`'s
+`tracker:` field. Not directly user-invoked.
+
+| Adapter | Status | Notes |
+|---|---|---|
+| [`tracker-linear`](../tracker-linear/SKILL.md) | Shipped (default) | Full capability set. |
+| `tracker-github` | Planned (Phase A2) | Triage end-to-end works; full chain blocks on Phase B schema migration. |
+| `tracker-jira`, `tracker-local-md` | Deferred | — |
 
 ---
 
@@ -86,6 +99,7 @@ files directly. Existing repos backfill on first need.
 | `design-an-interface` | Removed (deprecated upstream) | Matt deprecated this; the deepening work happens in `/improve-codebase-architecture` now. |
 | `request-refactor-plan` | Rejected | Overlaps `/improve-codebase-architecture` and the Plan agent / planning phase of AFK contracts. |
 | `git-guardrails-claude-code` | Rejected | Lefthook + branch protection cover this mechanically per `workflow.md` §7. Skill would duplicate without adding authority. |
+| Matt's `/triage` | Rejected | Valesco's `/triage` is a strict superset — same canonical state machine, OOS pattern, and brief structure, plus AFK eligibility, tier logic, and §14.3 refusal. Adopting both creates namespace ambiguity for zero capability gain. Re-evaluate if Matt diverges meaningfully (e.g., adds typed adapter contracts). |
 | `obsidian`, `obsidian-vault` | Out of scope | Personal knowledge workflow, orthogonal to AFK. |
 | `caveman` | N/A | Response style, not a workflow skill. Loaded per session. |
 | `/setup-matt-pocock-skills` | Skip | Valesco repos already follow the conventions this skill bootstraps. Run it only on a brand-new project that isn't using the Valesco template. |

@@ -2,10 +2,10 @@
 
 Each Valesco repo can have an `.out-of-scope/` directory at its root for persistent records of rejected `Feature` / `Improvement` requests. The directory serves two purposes:
 
-1. **Institutional memory** — why a feature was rejected, so the reasoning isn't lost when the Linear issue is closed `Canceled`
+1. **Institutional memory** — why a feature was rejected, so the reasoning isn't lost when the issue is closed `canceled`
 2. **Deduplication** — when a new issue lands that matches a prior rejection, the skill can surface the previous decision instead of re-litigating it
 
-The directory is per-repo, not per-Linear-team, because the rejection context is usually rooted in a specific codebase's architecture and scope.
+The directory is per-repo, not per-tracker-team, because the rejection context is usually rooted in a specific codebase's architecture and scope.
 
 ## Directory structure
 
@@ -16,7 +16,7 @@ The directory is per-repo, not per-Linear-team, because the rejection context is
 └── graphql-api.md
 ```
 
-One file per **concept**, not per issue. Multiple Linear issues requesting the same thing share one file.
+One file per **concept**, not per issue. Multiple tracker issues requesting the same thing share one file.
 
 ## File format
 

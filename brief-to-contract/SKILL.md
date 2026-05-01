@@ -1,24 +1,24 @@
 ---
 name: brief-to-contract
-description: Orchestrate a Linear issue through the full Valesco AFK chain — from triage to attested goal-contract — by sequentially invoking the right per-stage skills (`/linear-triage`, `/diagnose`, `/grill-with-docs`, `/draft-contract`, `/attest`). Use when the user says "take VA-NNN through to attested contract", "run brief-to-contract for VA-NNN", "I want to AFK this issue", "walk this through the pipeline", "what's the next step on VA-NNN", or asks to drive a Linear ticket end-to-end toward an AFK run. This skill IS the orchestration spine — it does not replace `/linear-triage` (one-shot triage), `/draft-contract` (one-shot draft), or `/attest` (one-shot attestation); it composes them with the right gates, resume detection, and HITL exits. Reach for it whenever you'd otherwise be manually stitching those skills together to advance one issue.
+description: Orchestrate a tracker issue through the full Valesco AFK chain — from triage to attested goal-contract — by sequentially invoking the right per-stage skills (`/triage`, `/diagnose`, `/grill-with-docs`, `/draft-contract`, `/attest`). Use when the user says "take VA-NNN through to attested contract", "run brief-to-contract for VA-NNN", "I want to AFK this issue", "walk this through the pipeline", "what's the next step on VA-NNN", or asks to drive a tracker ticket end-to-end toward an AFK run. This skill IS the orchestration spine — it does not replace `/triage` (one-shot triage), `/draft-contract` (one-shot draft), or `/attest` (one-shot attestation); it composes them with the right gates, resume detection, and HITL exits. Reach for it whenever you'd otherwise be manually stitching those skills together to advance one issue.
 ---
 
 # /brief-to-contract
 
-Walk a Linear issue from inbound state all the way to an attested
+Walk a tracker issue from inbound state all the way to an attested
 `.goal-contract.yml` that is ready for the human to apply `afk-ready` to.
 The skill is a **stitcher** — it sequences calls to the per-stage skills,
 detects which stage is already done, enforces the gates between them, and
 exits cleanly when an issue turns out to be HITL.
 
 This skill writes **no authority-bearing artefacts of its own**. It posts
-status comments to Linear (with the AI disclaimer), and it tells *other*
+status comments to the active tracker (with the AI disclaimer), and it tells *other*
 skills to write things. The afk-ready label is never applied here — that
 is deliberate human work per governance plan §G1.
 
 ## When to run
 
-When you have a Linear issue (or want to find one) and intend to drive it
+When you have a tracker issue (or want to find one) and intend to drive it
 toward an AFK run. The skill picks the right starting stage based on the
 issue's current state — you don't need to know whether triage has
 happened, or a draft exists, or attestation is in place. It detects all of
@@ -33,7 +33,7 @@ that.
   just attest) — invoke the per-stage skill directly. This one is for the
   end-to-end walk.
 - The repo is a control plane (`afkEligible: false`) — the skill refuses
-  in Stage 0 and routes the user to `/linear-triage` for `ready-for-human`
+  in Stage 0 and routes the user to `/triage` for `ready-for-human`
   instead.
 
 ## Authority boundary — what this skill never does
@@ -54,7 +54,7 @@ Read `.afk/config.yml` at the working repo root before doing anything else.
 
 | Field | Effect |
 |---|---|
-| `afkEligible: false` | **Refuse and route.** Print: "This repo is a control plane (afkEligible:false). AFK contracts cannot run against it (§14.3). Hand the issue to `/linear-triage` and drive it to `ready-for-human` instead." Then stop. |
+| `afkEligible: false` | **Refuse and route.** Print: "This repo is a control plane (afkEligible:false). AFK contracts cannot run against it (§14.3). Hand the issue to `/triage` and drive it to `ready-for-human` instead." Then stop. |
 | `afkEligible: true` + `projectTier: 1` | Note for later — the skill will recommend canaryPlan when entering Stage 4. |
 | `afkEligible: true` + `projectTier: 2` or `3` | Standard chain applies. |
 | missing | Surface to the maintainer. The skill cannot orchestrate without knowing tier and eligibility. |
@@ -75,9 +75,9 @@ the entry point. Detection rules in detail:
 | `.goal-contract.yml` exists, no `<PLANNER_SUGGESTED:>` tokens, no attestation record (or sha drift) | Stage 7 | "Contract authored; entering attestation." |
 | `.goal-contract.yml` exists, but `<PLANNER_SUGGESTED:>` tokens remain | Refuse to advance | "Contract has unreplaced tokens. Replace them, then I'll run /attest." |
 | `.goal-contract.draft.yml` exists, no `.goal-contract.yml` | Stage 5 | "Draft exists; awaiting token replacement + rename." |
-| Linear issue is `Todo` + `ready-for-agent` + has Agent Brief comment | Stage 2 (or 4 if Bug already has captured reproducer / not a Bug) | "Brief in place; entering diagnosis check." |
-| Linear issue is `Triage` or `needs-info` | Stage 1 | "Issue not yet brief-ready; entering triage." |
-| Linear issue is `In Progress` / `In Review` / `Reviewed` | **Read-only** | "Issue is in active work; this skill is read-only on those statuses." |
+| issue status is `todo` + `ready-for-agent` + has Agent Brief comment | Stage 2 (or 4 if Bug already has captured reproducer / not a Bug) | "Brief in place; entering diagnosis check." |
+| issue status is `triage` or has `needs-info` | Stage 1 | "Issue not yet brief-ready; entering triage." |
+| issue status is `in-progress` / `in-review` / `reviewed` | **Read-only** | "Issue is in active work; this skill is read-only on those statuses." |
 
 Always **announce** the detected resume point and ask the user to confirm
 or override before proceeding. A misdetected resume point can skip a gate
@@ -86,7 +86,7 @@ the user wanted to revisit.
 ## Stage 1 — Triage gate
 
 If the issue isn't yet at `status=Todo` + `label=ready-for-agent` + has an
-Agent Brief comment, invoke [`/linear-triage`](../linear-triage/SKILL.md)
+Agent Brief comment, invoke [`/triage`](../triage/SKILL.md)
 and let it do its work.
 
 After triage returns, branch on the outcome:
@@ -118,7 +118,7 @@ diagnose run will:
 3. Hypothesise + instrument + fix-or-document.
 4. Output a regression test and a verifier-ready loop command.
 
-After `/diagnose` returns, **fold its outputs back into the Linear issue**:
+After `/diagnose` returns, **fold its outputs back into the tracker issue**:
 
 - Append a comment (with AI disclaimer) summarizing: feedback-loop
   command, regression test path, the post-mortem one-liner.
@@ -164,22 +164,22 @@ Before invoking, do **tier escalation detection**:
 
 | Signal | Recommend |
 |---|---|
-| Linear issue has a `customer` field set | Tier 1 |
+| Issue has a `customer` field set (when adapter declares `customer_field`) | Tier 1 |
 | Likely `writePaths` touch `**/auth/**`, `**/billing/**`, `**/migrations/**`, `supabase/migrations/**`, `src/**/payment*` | Tier 1 |
-| Linear issue is in a Tier-1 project per `.afk/config.yml` | Tier 1 |
+| Issue is in a Tier-1 project per `.afk/config.yml` | Tier 1 |
 | None of the above | Tier 3 default (matches `/draft-contract`'s posture) |
 
 Tell the user the recommendation and the reason, then invoke
-[`/draft-contract`](../draft-contract/SKILL.md) with the Linear issue ID.
+[`/draft-contract`](../draft-contract/SKILL.md) with the issue ID.
 The draft skill writes `.goal-contract.draft.yml` with
 `<PLANNER_SUGGESTED:>` tokens for human-authored fields; for Tier 1, the
 `canaryPlan` block is one of those tokens.
 
-After `/draft-contract` returns, post a Linear comment (with AI
+After `/draft-contract` returns, post a tracker comment (with AI
 disclaimer) noting that the draft is in place and what the user needs to
 do next (token replacement). Do not include the contract contents in the
 comment — that's noise, and it tempts future readers to edit the contract
-in Linear instead of in the file.
+in the tracker instead of in the file.
 
 ## Stage 5 — Token replacement (HITL by design)
 
@@ -252,7 +252,7 @@ After `/attest` returns successfully:
 - If sha drift is detected later (the user edited the contract after
   attestation), refuse Stage 8 and tell them to re-attest.
 
-Post a Linear comment (with AI disclaimer) confirming attestation is in
+Post a tracker comment (with AI disclaimer) confirming attestation is in
 place — but **never** the attestation record contents.
 
 ## Stage 8 — Hand-off
@@ -294,7 +294,7 @@ whatever progress was captured. Never coerce a HITL issue toward AFK.
 
 | Stage | HITL trigger | Exit message |
 |---|---|---|
-| 0 | `afkEligible: false` | "Control plane — route to `/linear-triage` for `ready-for-human`." |
+| 0 | `afkEligible: false` | "Control plane — route to `/triage` for `ready-for-human`." |
 | 1 | Triage decides `ready-for-human` | Show the human-brief; stop. |
 | 1 | Triage decides `needs-info` | Show the missing facts; stop. |
 | 2 | `/diagnose` cannot build a reproducer | Drop back to Stage 1 with a specific `needs-info` recommendation. |
@@ -312,7 +312,7 @@ authored with Tier-1 defaults rather than retrofitted.
 Detection inputs:
 
 1. **`.afk/config.yml`** — if `projectTier: 1`, all issues default to Tier 1.
-2. **Linear issue body** — does it mention a customer name? Production
+2. **Issue body** — does it mention a customer name? Production
    incident ID? "client-critical" / "billing" / "auth flow" language?
 3. **Inferred `writePaths`** — read the brief, plus any architectural
    anchors. If the writes likely touch sensitive globs, escalate.
@@ -337,9 +337,9 @@ Confirm Tier 1, downgrade, or pause to discuss?
 Do not silently set the tier — confirm with the user and pass their
 choice to `/draft-contract` so the draft is built right.
 
-## AI disclaimer for Linear comments
+## AI disclaimer for tracker comments
 
-Every Linear comment this skill posts (status announcements, stage
+Every tracker comment this skill posts (status announcements, stage
 hand-offs, attestation confirmations) starts on its own line with:
 
 ```
@@ -348,7 +348,7 @@ hand-offs, attestation confirmations) starts on its own line with:
 
 The skill posts comments at: end of Stage 4 (draft created), end of
 Stage 7 (attestation in place). It does **not** post per-stage chatter —
-Linear is for durable status, not progress reports.
+the tracker is for durable status, not progress reports.
 
 Local files (the contract draft, the attestation record, debug scripts)
 carry their own provenance via git history; no disclaimer needed.
@@ -367,7 +367,7 @@ When the skill reaches Stage 8 hand-off, check:
 - [ ] Tier in the contract matches the recommendation made in Stage 4.
 - [ ] For Tier 1: `canaryPlan` block is non-empty and has metrics,
       thresholds, rollbackTrigger, windowMinutes.
-- [ ] Linear issue has the Agent Brief comment + `ready-for-agent` label
+- [ ] Tracker issue has the Agent Brief comment + `ready-for-agent` label
       + status `Todo`.
 
 If any check fails, do not print the hand-off block. Surface the
@@ -391,7 +391,7 @@ specific failure and the remediation path.
 
 ## References
 
-- [`../linear-triage/SKILL.md`](../linear-triage/SKILL.md) — Stage 1.
+- [`../triage/SKILL.md`](../triage/SKILL.md) — Stage 1.
 - [`../diagnose/SKILL.md`](../diagnose/SKILL.md) — Stage 2.
 - [`../feedback-loop/SKILL.md`](../feedback-loop/SKILL.md) — invoked
   inside `/diagnose` Phase 1.
