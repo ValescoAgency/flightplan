@@ -43,22 +43,6 @@ Each entry:
 - **Classification**: skill.
 - **Tracking**: none yet.
 
-### `tracker-github` adapter (Phase A2)
-
-- **Purpose**: GitHub Issues adapter implementing the
-  [tracker contract](./adr/0001-tracker-adapter-contract.md). Free
-  alternative for low-priority projects. Reduced capabilities — no
-  `customer_field`, `team_namespace: false`,
-  `active_work_detection: best-effort`.
-- **Trigger-to-author**: When a real low-priority project needs
-  `/triage` against GitHub Issues. Don't ship preemptively.
-- **Classification**: skill.
-- **Tracking**: none yet. See
-  [`refactor-plan.md`](./refactor-plan.md#phase-a2--tracker-github-proof-of-concept).
-- **Constraint**: full chain (`/draft-contract` and downstream) blocks
-  on Phase B schema migration in `valesco-platform`. Triage works
-  end-to-end independently.
-
 ### `tracker-jira` and `tracker-local-md` adapters
 
 - **Purpose**: Same contract; cover Jira workflows and local-markdown
@@ -139,6 +123,32 @@ belong in `valesco-platform/afk/`.
 ---
 
 ## Closed gaps
+
+### `tracker-github` adapter (Phase A2) — shipped 2026-05-01
+
+- **Ships**: `tracker-github/SKILL.md`, `tracker-github/labels.yml`.
+- **Purpose**: GitHub Issues adapter — proof-of-concept and
+  free-alternative for low-priority projects. Implements the floor
+  (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`,
+  `set_status`) via the `gh` CLI. Capability declaration:
+  `customer_field: false`, `project_membership: false`,
+  `cycle_membership: false`, `team_namespace: false`,
+  `active_work_detection: best-effort`.
+- **Status mapping**: GitHub has no native status enum; the adapter
+  encodes canonical statuses via issue `state` + `stateReason` + a
+  single mutually-exclusive state-encoding label
+  (`triage`/`backlog`/`todo`/`in-progress`/`in-review`/`reviewed`).
+- **Active-work detection**: heuristic — open issue + (linked PR via
+  timeline OR has assignee). `/triage` warns but doesn't refuse on
+  best-effort detection.
+- **Constraint** (still open): the full AFK chain through
+  `/draft-contract` and downstream rejects GitHub-shaped IDs
+  (`owner/repo#NNN`) at schema validation. `/triage` works
+  end-to-end against GitHub today; the rest waits on Phase B.
+- **Validation milestone**: walk one real low-priority GitHub-Issues
+  repo through `/triage` end-to-end before declaring this
+  battle-tested. The `flightplan` repo itself is a fine first
+  candidate.
 
 ### Tracker adapter contract — shipped 2026-05-01
 
