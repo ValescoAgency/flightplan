@@ -1,0 +1,81 @@
+# GitHub Issues adapter — default label mapping.
+#
+# Format: <canonical name>: <vendor-native string>
+#
+# GitHub's community-standard labels are lowercase and slightly
+# different from Valesco's canonical names. This file maps both ways.
+# Per-repo overrides land at `.afk/tracker-labels.yml` if a specific
+# repo uses different strings (e.g., `bug:prod` instead of `bug`).
+#
+# See ../docs/adr/0001-tracker-adapter-contract.md for the three-layer
+# resolution rule (canonical → adapter default → per-repo override).
+
+# Category labels — every actively-triaged issue has exactly one.
+# GitHub's `bug` and `enhancement` labels exist by default on most
+# repos; `improvement` is non-standard and will be created by the
+# adapter on first use if absent.
+categories:
+  Bug: bug
+  Feature: enhancement
+  Improvement: improvement
+
+# State labels — at most one per issue. These match canonical names
+# directly; GitHub repos using the flightplan triage funnel will have
+# these labels created on first use.
+state_labels:
+  needs-info: needs-info
+  ready-for-agent: ready-for-agent
+  ready-for-human: ready-for-human
+  wontfix: wontfix
+  needs-triage: needs-triage
+
+# Status mapping — GitHub has no native status enum. The adapter
+# encodes the canonical state machine via a combination of issue
+# state (open/closed + state_reason) and a single state-encoding
+# label that's mutually exclusive with other state-encoding labels.
+#
+# `state-encoding labels` is the set of labels that participate in
+# status: { triage, backlog, todo, in-progress, in-review, reviewed }.
+# When transitioning between OPEN canonical statuses, the adapter
+# strips other state-encoding labels and applies the new one.
+statuses:
+  triage:
+    state: open
+    label: triage
+  backlog:
+    state: open
+    label: backlog
+  todo:
+    state: open
+    label: todo
+  in-progress:
+    state: open
+    label: in-progress
+  in-review:
+    state: open
+    label: in-review
+  reviewed:
+    state: open
+    label: reviewed
+  done:
+    state: closed
+    state_reason: completed
+  canceled:
+    state: closed
+    state_reason: not_planned
+  duplicate:
+    state: closed
+    state_reason: duplicate
+
+# Non-canonical labels GitHub repos commonly carry — these are
+# preserved on read (surfaced as `extra_labels` in the canonical issue
+# shape) and untouched on write. The adapter is a good citizen on
+# existing repos. Listed here for documentation only; no logic depends
+# on this list.
+preserved_extras:
+  - good first issue
+  - help wanted
+  - documentation       # if a repo uses this for category, override above
+  - duplicate            # GitHub default; harmless duplicate of state_reason
+  - invalid              # GitHub default
+  - question             # GitHub default
