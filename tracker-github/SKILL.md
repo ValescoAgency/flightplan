@@ -1,6 +1,6 @@
 ---
 name: tracker-github
-description: GitHub Issues adapter for flightplan's tracker contract. Implements the canonical operations API (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`, `set_status`) using the `gh` CLI (or the GitHub MCP if loaded). Loaded by consumer skills (`/triage`, `/draft-contract`, `/brief-to-contract`, `/diagnose`) when `.afk/config.yml` declares `tracker: github`. Not invoked directly by users — this is the adapter the rest of flightplan reads from. Suitable for low-priority projects that don't justify a Linear seat; the full AFK chain through `/draft-contract` is blocked on Phase B schema migration in `valesco-platform`, but `/triage` works end-to-end against GitHub today.
+description: 'GitHub Issues adapter for flightplan''s tracker contract. Implements the canonical operations API (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`, `set_status`) using the `gh` CLI (or the GitHub MCP if loaded). Loaded by consumer skills (`/triage`, `/draft-contract`, `/brief-to-contract`, `/diagnose`) when `.afk/config.yml` declares `tracker: github`. Not invoked directly by users — this is the adapter the rest of flightplan reads from. Suitable for low-priority projects that don''t justify a Linear seat; the full AFK chain through `/draft-contract` is blocked on Phase B schema migration in `valesco-platform`, but `/triage` works end-to-end against GitHub today.'
 disable-model-invocation: true
 ---
 
