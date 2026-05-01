@@ -102,6 +102,40 @@ first use — `/grill-with-docs` creates `CONTEXT.md` lazily when the first
 term is resolved, and creates `docs/adr/` lazily when the first ADR is
 needed.
 
+### When `afkEligible: false` is the right answer
+
+`afkEligible: false` exists for **authority-bearing control planes**
+that the AFK pipeline could rewrite to bypass governance. The canonical
+example is [`valesco-platform`](https://github.com/ValescoAgency/valesco-platform):
+it owns the validators, pre-flight, label handler, and authority
+schemas. A contract that modifies that code defeats the gates §G1 / §G8
+exist to enforce. The §14.3 self-modification rule applies.
+
+`afkEligible: false` is **not** the right answer for repos that ship
+*advisory* skills, even when those skills shape AFK runs:
+
+- Flightplan ships `/triage`, `/draft-contract`, `/attest`, etc. — but
+  these produce *inputs* to authority (Agent Briefs, draft contracts,
+  attestation walks). Authority itself still runs in valesco-platform.
+  A contract that modifies flightplan still has to pass valesco-platform
+  pre-flight before merging, so the §14.3 loop is broken by repo
+  separation alone.
+- Repos with workflow tooling, CI scripts, dev infrastructure are
+  similarly advisory — they affect how humans interact with AFK, not
+  whether AFK enforces the rules.
+
+For these repos: `afkEligible: true`. If specific paths within them
+warrant heightened scrutiny (e.g., flightplan's `attest/**` and
+`tracker-*/**` are authority-adjacent enough to deserve Tier 1 +
+adversarial review), the right tool is the **protected-paths manifest**
+in `valesco-platform/afk/protected-paths/`, not blanket disqualification
+of the whole repo.
+
+When in doubt, ask: "If an AFK contract on this repo were maliciously
+crafted, could it bypass a governance gate that lives in
+valesco-platform?" If no — `afkEligible: true`. If yes — `false`, and
+write down which gate.
+
 ## Tracker adapters
 
 The "context layer" — issue body, comments, labels, status — is a
