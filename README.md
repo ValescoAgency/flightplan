@@ -47,7 +47,7 @@ active adapter is selected via `tracker:` in `.afk/config.yml` (default
 | Adapter | Status | Capabilities |
 |---|---|---|
 | [`tracker-linear`](tracker-linear/SKILL.md) | Shipped (default) | Full — customer field, project/cycle membership, team namespace, reliable active-work detection |
-| `tracker-github` | Planned (Phase A2) | Reduced — no customer field, best-effort active-work detection. Triage works end-to-end; full chain through `/draft-contract` waits on Phase B schema migration in `valesco-platform`. |
+| [`tracker-github`](tracker-github/SKILL.md) | Shipped (Phase A2) | Reduced — no customer field, best-effort active-work detection. Triage works end-to-end; full chain through `/draft-contract` waits on Phase B schema migration in `valesco-platform`. |
 | `tracker-jira`, `tracker-local-md` | Deferred | — |
 
 These compose with Matt Pocock's

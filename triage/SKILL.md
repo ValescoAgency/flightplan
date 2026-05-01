@@ -30,7 +30,7 @@ session start by reading `.afk/config.yml`'s `tracker:` field.
 | `tracker:` value | Adapter |
 |---|---|
 | `linear` (default) | [`tracker-linear/SKILL.md`](../tracker-linear/SKILL.md) |
-| `github` | `tracker-github/SKILL.md` (planned) |
+| `github` | [`tracker-github/SKILL.md`](../tracker-github/SKILL.md) |
 | anything else | refuse and surface — no silent fallback |
 
 Tracker-specific knowledge (team mappings, vendor-native status names,
