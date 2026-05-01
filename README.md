@@ -51,10 +51,14 @@ active adapter is selected via `tracker:` in `.afk/config.yml` (default
 | `tracker-jira`, `tracker-local-md` | Deferred | — |
 
 This repo is its own dogfood for the GitHub adapter — see
-[`.afk/config.yml`](.afk/config.yml). `afkEligible: false` (skill-layer
-control plane); `tracker: github`. Walking flightplan issues through
-`/triage` against the `tracker-github` adapter is the validation
-milestone for Phase A2.
+[`.afk/config.yml`](.afk/config.yml). `afkEligible: true` (advisory
+skills, not authority — see
+[`docs/workflow.md`](docs/workflow.md#when-afkeligible-false-is-the-right-answer)
+for why flightplan is not a §14.3 control plane); `projectTier: 2`;
+`tracker: github`. Walking flightplan issues through the full AFK
+chain against the `tracker-github` adapter is the validation milestone
+for Phase A2 — modulo the Phase B schema regex blocker, which the walk
+will surface concretely at `/draft-contract`.
 
 These compose with Matt Pocock's
 [engineering skills](https://github.com/mattpocock/skills/tree/main/skills/engineering)
