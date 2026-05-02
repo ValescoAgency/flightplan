@@ -36,6 +36,7 @@ User-invoked skills that drive issues through the AFK chain. Vendor-agnostic
 | [`/draft-contract`](draft-contract/SKILL.md) | Lift a tracker issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens (§G8 gate). |
 | [`/attest`](attest/SKILL.md) | Tier-scaled attestation checklist; writes `.afk/attestations/<id>.json`. |
 | [`/brief-to-contract`](brief-to-contract/SKILL.md) | Orchestration spine — drives an issue from triage through to attested contract with resume detection + HITL exits. |
+| [`/run-attested`](run-attested/SKILL.md) | **v1 dogfood only** — manually invokes `@valesco/afk-runner` against an attested contract. Production runs go through the central label handler in v2 (see [VA-291](https://linear.app/valescoagency/issue/VA-291)). |
 
 ## Tracker adapters
 
