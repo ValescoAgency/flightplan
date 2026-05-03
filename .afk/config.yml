@@ -1,0 +1,44 @@
+# Flightplan repo's own AFK configuration.
+#
+# Flightplan ships the SKILLS that drive AFK runs on other Valesco
+# repos (/triage, /diagnose, /draft-contract, /attest, /brief-to-contract,
+# tracker-*). The earlier framing here was "skill-layer control plane,
+# afkEligible: false, parallel to valesco-platform §14.3" — that was
+# wrong. Reverted 2026-05-01 with this commit.
+#
+# §14.3 protects the AUTHORITY-bearing pipeline (validators,
+# pre-flight, label handler, schema files in valesco-platform/afk/).
+# Flightplan's skills are ADVISORY — they produce inputs to the
+# pipeline (Agent Briefs, contract drafts, attestation walks), but
+# the pipeline itself still runs in valesco-platform and re-validates
+# every contract. A contract authored on flightplan still has to pass
+# pre-flight in valesco-platform; the governance loop §14.3 prevents
+# is broken by repo separation, not by afkEligible: false.
+#
+# So flightplan is afkEligible: true. Heightened scrutiny on contracts
+# that touch authority-adjacent paths (attest/**, draft-contract/**,
+# brief-to-contract/**) is the right tool — that belongs in
+# valesco-platform's protected-paths manifest, not in this config.
+#
+# What works on flightplan with afkEligible: true:
+#   - /triage, /diagnose, /feedback-loop, /draft-contract, /attest,
+#     /brief-to-contract — full chain
+#   - Issues can move to ready-for-agent and through to AFK runs
+#   - Phase B blocker still applies: GitHub-shaped issue IDs
+#     (owner/repo#NNN) fail goal-contract.v1.json's regex until
+#     valesco-platform ships schema v2. Until then, contracts authored
+#     here will be rejected at /draft-contract — that's the next
+#     thing the dogfood walk surfaces.
+#
+# This config still serves as the dogfood validation milestone for
+# the tracker-github adapter (Phase A2). With afkEligible: true the
+# walk now exercises the full chain (modulo Phase B).
+
+afkEligible: true         # advisory skills, not authority — pipeline runs in valesco-platform
+projectTier: 2            # internal tooling, not customer-facing
+tracker: github           # tracker-github adapter (Phase A2)
+
+# trackerLabelsPath:      # Uncomment + populate if this repo's GitHub
+#                         # labels diverge from tracker-github/labels.yml
+#                         # defaults. Today they don't — the repo will
+#                         # use the adapter defaults verbatim.
