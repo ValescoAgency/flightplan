@@ -54,7 +54,7 @@ idea / conversation / paste
    AFK pipeline (valesco-platform)  — pre-flight, adversarial review, run, label handler
 ```
 
-The orchestration spine, [`/brief-to-contract`](../brief-to-contract/SKILL.md),
+The orchestration spine, [`/brief-to-contract`](../skills/brief-to-contract/SKILL.md),
 walks an issue from the Tracker-issue line through to the attest step. It
 detects which stage to enter based on existing artefacts and exits cleanly
 on HITL forks.
@@ -66,13 +66,13 @@ on HITL forks.
 | Idea → aligned plan | [`/grill-with-docs`](https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md) | Matt | Alignment + locks domain language in `CONTEXT.md` + records ADRs inline |
 | Plan → PRD | [`/to-prd`](https://github.com/mattpocock/skills/blob/main/skills/engineering/to-prd/SKILL.md) | Matt | Synthesizes a PRD from current context; posts to the tracker |
 | PRD → issues | [`/to-issues`](https://github.com/mattpocock/skills/blob/main/skills/engineering/to-issues/SKILL.md) | Matt | Breaks the PRD into vertical-slice tracer-bullet issues; tags HITL vs AFK |
-| Tracker issue → ready-for-agent | [`/triage`](../triage/SKILL.md) | Valesco | Funnel toward `ready-for-agent` with an Agent Brief comment; HITL-aware |
-| Bug needs reproducer | [`/diagnose`](../diagnose/SKILL.md) | Valesco | Six-phase loop; Phase 1 builds the verifier the contract will use |
-| Construct a feedback loop | [`/feedback-loop`](../feedback-loop/SKILL.md) | Valesco | The 10-pattern catalog for deterministic agent-runnable signals |
+| Tracker issue → ready-for-agent | [`/triage`](../skills/triage/SKILL.md) | Valesco | Funnel toward `ready-for-agent` with an Agent Brief comment; HITL-aware |
+| Bug needs reproducer | [`/diagnose`](../skills/diagnose/SKILL.md) | Valesco | Six-phase loop; Phase 1 builds the verifier the contract will use |
+| Construct a feedback loop | [`/feedback-loop`](../skills/feedback-loop/SKILL.md) | Valesco | The 10-pattern catalog for deterministic agent-runnable signals |
 | Architecture review | [`/improve-codebase-architecture`](https://github.com/mattpocock/skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md) | Matt | Find deepening opportunities; informed by `CONTEXT.md` + ADRs |
-| Brief → draft contract | [`/draft-contract`](../draft-contract/SKILL.md) | Valesco | Lift tracker issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens |
-| Draft → attested | [`/attest`](../attest/SKILL.md) | Valesco | Tier-scaled checklist; writes `.afk/attestations/<id>.json` |
-| Whole chain | [`/brief-to-contract`](../brief-to-contract/SKILL.md) | Valesco | Orchestration spine; sequences the above with resume detection + HITL exits |
+| Brief → draft contract | [`/draft-contract`](../skills/draft-contract/SKILL.md) | Valesco | Lift tracker issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens |
+| Draft → attested | [`/attest`](../skills/attest/SKILL.md) | Valesco | Tier-scaled checklist; writes `.afk/attestations/<id>.json` |
+| Whole chain | [`/brief-to-contract`](../skills/brief-to-contract/SKILL.md) | Valesco | Orchestration spine; sequences the above with resume detection + HITL exits |
 | Pre-flight, adversarial review, run, label handler | — | `valesco-platform/afk/` | **Pipeline, not skills.** Authority-bearing, hash-bound, replay-safe. |
 
 The `/brief-to-contract` spine never crosses into pipeline territory.
@@ -145,8 +145,8 @@ only canonical names; the adapter translates to vendor-native form.
 
 | Adapter | Status | Notes |
 |---|---|---|
-| [`tracker-linear`](../tracker-linear/SKILL.md) | Default, shipped | Full capability set — `customer_field`, `team_namespace`, reliable active-work detection. |
-| [`tracker-github`](../tracker-github/SKILL.md) | Shipped (Phase A2) | Triage-end-to-end works; full chain through `/draft-contract` blocked on Phase B schema migration in `valesco-platform`. |
+| [`tracker-linear`](../skills/tracker-linear/SKILL.md) | Default, shipped | Full capability set — `customer_field`, `team_namespace`, reliable active-work detection. |
+| [`tracker-github`](../skills/tracker-github/SKILL.md) | Shipped (Phase A2) | Triage-end-to-end works; full chain through `/draft-contract` blocked on Phase B schema migration in `valesco-platform`. |
 | `tracker-jira`, `tracker-local-md` | Deferred | — |
 
 The contract that defines the adapter API is
@@ -226,10 +226,10 @@ Short version:
 
 ### How AFK skills use ADRs
 
-- [`/draft-contract`](../draft-contract/SKILL.md) reads the ADR area
+- [`/draft-contract`](../skills/draft-contract/SKILL.md) reads the ADR area
   relevant to the issue's `writePaths` so the contract doesn't propose
   changes that contradict locked-in decisions.
-- [`/diagnose`](../diagnose/SKILL.md) reads ADRs in the bug's area before
+- [`/diagnose`](../skills/diagnose/SKILL.md) reads ADRs in the bug's area before
   hypothesising — sometimes a "bug" is the documented behavior of an
   ADR'd decision.
 - [`/improve-codebase-architecture`](https://github.com/mattpocock/skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md)

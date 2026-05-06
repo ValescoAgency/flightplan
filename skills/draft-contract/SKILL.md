@@ -73,7 +73,7 @@ Short version:
 | `intent.successCriteria` | Bullets under `## Acceptance`, `## Success criteria`, `## Test plan`. Lift each bullet as-is; strip trailing punctuation. |
 | `intent.nonGoals` | Bullets under `## Non-goals`, `## Out of scope`. |
 | `intent.anchors.docs[]` | URLs in the issue body that point at `.md`, `docs/`, ADR/PRD paths, or external doc hosts (Notion, Sanity, Obsidian). For each, compute a sha256 of the URL string itself as the `versionHash` placeholder — pre-flight will replace it with content hash. |
-| `metadata.linearIssueId` | The tracker's canonical issue identifier — the adapter returns whatever the vendor's native form is. **Schema field name is unchanged in this rollout** (still `linearIssueId`); the active Linear adapter populates it with `TEAM-NNN`. The GitHub adapter (when authored) cannot use this field until the Phase B v2 schema migration in `valesco-platform` lands — see [`../docs/refactor-plan.md`](../docs/refactor-plan.md). |
+| `metadata.linearIssueId` | The tracker's canonical issue identifier — the adapter returns whatever the vendor's native form is. **Schema field name is unchanged in this rollout** (still `linearIssueId`); the active Linear adapter populates it with `TEAM-NNN`. The GitHub adapter (when authored) cannot use this field until the Phase B v2 schema migration in `valesco-platform` lands — see [`../../docs/refactor-plan.md`](../../docs/refactor-plan.md). |
 | `metadata.created` | Current timestamp, ISO 8601. |
 
 If a section source is **missing** from the issue body, do not leave the
@@ -149,7 +149,7 @@ Before printing the next-steps block, verify:
 - [ ] `metadata.linearIssueId` matches the pattern `^[A-Z]{2,6}-\d+$`.
       *(Until Phase B schema migration: this means the active adapter
       must be Linear. GitHub adapter callers will fail this check; that
-      gap is registered in [`../docs/refactor-plan.md`](../docs/refactor-plan.md).)*
+      gap is registered in [`../../docs/refactor-plan.md`](../../docs/refactor-plan.md).)*
 - [ ] Every field listed in [`authority-fields.md`](./authority-fields.md) as
       "token-required when not derivable" is either a real value or contains
       the literal string `<PLANNER_SUGGESTED:`.
@@ -175,9 +175,9 @@ not leave a malformed draft on disk.
   is the source of intent for this draft).
 - [`../tracker-linear/SKILL.md`](../tracker-linear/SKILL.md) — current
   default adapter; provides `fetch_issue`.
-- [`../docs/adr/0001-tracker-adapter-contract.md`](../docs/adr/0001-tracker-adapter-contract.md)
+- [`../../docs/adr/0001-tracker-adapter-contract.md`](../../docs/adr/0001-tracker-adapter-contract.md)
   — adapter contract design.
-- [`../docs/refactor-plan.md`](../docs/refactor-plan.md) — Phase B
+- [`../../docs/refactor-plan.md`](../../docs/refactor-plan.md) — Phase B
   blocker explanation for non-Linear adapters.
 - `valesco-platform/docs/afk/governance-plan.md` §G8 (planner → main handoff)
 - `valesco-platform/docs/afk/intake.md` (full intake flow context)

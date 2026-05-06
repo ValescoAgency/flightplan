@@ -92,7 +92,7 @@ Read `.afk/config.yml`. If `afkEligible` is `false` or absent:
 > Refusing to run. This repo's `.afk/config.yml` declares
 > `afkEligible: false` (or omits the field — default safe). AFK refuses
 > to operate against repos that aren't explicitly opted in. See
-> [`docs/workflow.md#when-afkeligible-false-is-the-right-answer`](../docs/workflow.md#when-afkeligible-false-is-the-right-answer)
+> [`docs/workflow.md#when-afkeligible-false-is-the-right-answer`](../../docs/workflow.md#when-afkeligible-false-is-the-right-answer)
 > if you're unsure whether to flip this.
 
 ### 6. Local environment is ready
@@ -188,4 +188,4 @@ v1.5a — note this in the post-run report when `metadata.tier === 1`.
 - Runner package: [VA-288](https://linear.app/valescoagency/issue/VA-288)
 - Signing-key setup: [`afk/runner/docs/signing-key-setup.md`](https://github.com/ValescoAgency/valesco-platform/blob/main/afk/runner/docs/signing-key-setup.md)
 - Sandcastle: <https://github.com/mattpocock/sandcastle>
-- Skill/pipeline boundary: [`docs/workflow.md`](../docs/workflow.md#skills-vs-pipeline)
+- Skill/pipeline boundary: [`docs/workflow.md`](../../docs/workflow.md#skills-vs-pipeline)

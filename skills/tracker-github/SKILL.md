@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # tracker-github — GitHub Issues adapter
 
-Implements the [tracker adapter contract](../docs/adr/0001-tracker-adapter-contract.md)
+Implements the [tracker adapter contract](../../docs/adr/0001-tracker-adapter-contract.md)
 for [GitHub Issues](https://docs.github.com/en/issues). Consumer skills
 load this adapter when `.afk/config.yml` declares `tracker: github`.
 
@@ -39,7 +39,7 @@ What does **not** work until Phase B lands:
   step)
 
 The constraint is intentional and registered in
-[`docs/refactor-plan.md`](../docs/refactor-plan.md). Phase A1 (rename
+[`docs/refactor-plan.md`](../../docs/refactor-plan.md). Phase A1 (rename
 + adapter contract) and Phase A2 (this adapter) ship independently of
 Phase B; the GitHub AFK chain becomes complete only when Phase B does.
 
@@ -177,7 +177,7 @@ See [`labels.yml`](./labels.yml). GitHub repos commonly use lowercase
 labels (`bug`, `enhancement`, `documentation`) where canonical uses
 capitalized categories (`Bug`, `Feature`, `Improvement`). Per-repo
 overrides via `.afk/tracker-labels.yml` follow the three-layer
-resolution rule from [ADR-0001](../docs/adr/0001-tracker-adapter-contract.md).
+resolution rule from [ADR-0001](../../docs/adr/0001-tracker-adapter-contract.md).
 
 **Non-canonical labels** (e.g., `good first issue`, `help wanted`,
 `priority:high`) are **preserved on read** as `extra_labels` and
@@ -258,15 +258,15 @@ catches a violation, file a bug against this adapter.
 
 ## References
 
-- [`../docs/adr/0001-tracker-adapter-contract.md`](../docs/adr/0001-tracker-adapter-contract.md)
+- [`../../docs/adr/0001-tracker-adapter-contract.md`](../../docs/adr/0001-tracker-adapter-contract.md)
   — the design decision this adapter implements.
-- [`../docs/refactor-plan.md`](../docs/refactor-plan.md) — Phase A2
+- [`../../docs/refactor-plan.md`](../../docs/refactor-plan.md) — Phase A2
   scope (this adapter); Phase B (schema migration that unblocks the
   full chain).
 - [`./labels.yml`](./labels.yml) — label mapping for GitHub.
 - [`../tracker-linear/SKILL.md`](../tracker-linear/SKILL.md) — sibling
   adapter (full-capability reference implementation).
-- [`../CONTEXT.md`](../CONTEXT.md) — canonical state machine and
+- [`../../CONTEXT.md`](../../CONTEXT.md) — canonical state machine and
   capability set.
 - [`gh` CLI manual](https://cli.github.com/manual/) — for any
   operation the cheatsheet doesn't cover.

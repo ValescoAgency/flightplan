@@ -136,8 +136,8 @@ to reproduce.
 
 ## Stage 3 — Domain alignment gate (optional)
 
-Read [`CONTEXT.md`](../docs/workflow.md#contextmd--ubiquitous-language)
-and skim [`docs/adr/`](../docs/workflow.md#adrs). Then read the Agent
+Read [`CONTEXT.md`](../../docs/workflow.md#contextmd--ubiquitous-language)
+and skim [`docs/adr/`](../../docs/workflow.md#adrs). Then read the Agent
 Brief.
 
 Invoke [`/grill-with-docs`](https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md)
