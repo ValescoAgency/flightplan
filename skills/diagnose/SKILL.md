@@ -48,8 +48,8 @@ Before Phase 1, read `.afk/config.yml` at the working repo root:
 | `afkEligible: true` + `projectTier: 2` or `3` | Standard discipline applies. |
 | missing | Surface to the maintainer before continuing. |
 
-Also: read [`CONTEXT.md`](../docs/workflow.md#contextmd--ubiquitous-language)
-for the project's domain glossary, and skim [`docs/adr/`](../docs/workflow.md#adrs)
+Also: read [`CONTEXT.md`](../../docs/workflow.md#contextmd--ubiquitous-language)
+for the project's domain glossary, and skim [`docs/adr/`](../../docs/workflow.md#adrs)
 for any architectural decision in the area you're touching. Use the glossary
 vocabulary in everything you write — test names, log prefixes, hypothesis
 text — so downstream skills (`/draft-contract`, `/to-issues`) inherit
@@ -160,7 +160,7 @@ knowledge that re-ranks instantly ("we just deployed a change to #3"), or
 know hypotheses they've already ruled out. Cheap checkpoint, big time saver.
 Don't block on it — proceed with your ranking if the user is AFK.
 
-Use the [`CONTEXT.md`](../docs/workflow.md#contextmd--ubiquitous-language)
+Use the [`CONTEXT.md`](../../docs/workflow.md#contextmd--ubiquitous-language)
 glossary in hypothesis names so the user reads them in the project's
 language, not generic terms.
 
@@ -243,7 +243,7 @@ they can paste into the tracker comment or feed to the next skill.
 | The Phase 5 regression test | Seeds an `intent.successCriteria` bullet — phrase it as "When `<scenario>`, the system produces `<observation>`" so it round-trips through the schema's ≥ 5-char testable rule. |
 | The hypothesis that turned out correct | Goes in the tracker comment / PR description as the post-mortem one-liner. |
 | Architectural finding (no good seam, etc.) | Open a separate tracker issue tagged `Improvement` and route through `/to-issues` → `/triage`. Do **not** bundle architectural work into the bug-fix contract. |
-| New domain term encountered | Update [`CONTEXT.md`](../docs/workflow.md#contextmd--ubiquitous-language) right there — same discipline as `/grill-with-docs`. Lazy-create the file if it doesn't exist. |
+| New domain term encountered | Update [`CONTEXT.md`](../../docs/workflow.md#contextmd--ubiquitous-language) right there — same discipline as `/grill-with-docs`. Lazy-create the file if it doesn't exist. |
 
 If `afkEligible: false`, the first two rows do not apply — feed straight to
 a human PR instead.

@@ -21,12 +21,12 @@ adapter contract ([ADR-0001](./adr/0001-tracker-adapter-contract.md)).
 
 | Skill | Use case |
 |---|---|
-| [`/triage`](../triage/SKILL.md) | Funnel issues toward `ready-for-agent` with an Agent Brief comment. **Vendor-agnostic** — uses the active tracker adapter. AFK-eligibility-aware via `.afk/config.yml`. *(Renamed from `/linear-triage` in 0.3.0.)* |
-| [`/diagnose`](../diagnose/SKILL.md) | Six-phase debugging discipline; Phase 1 builds the verifier the contract will use. AFK-aware tier handling. |
-| [`/feedback-loop`](../feedback-loop/SKILL.md) | The 10-pattern catalog for constructing deterministic agent-runnable signals. Cited by `/diagnose`, `/draft-contract`, and Matt's `/tdd`. |
-| [`/draft-contract`](../draft-contract/SKILL.md) | Lift a tracker issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens (G8 gate). |
-| [`/attest`](../attest/SKILL.md) | Tier-scaled attestation checklist; writes `.afk/attestations/<id>.json` (the label handler reads it). |
-| [`/brief-to-contract`](../brief-to-contract/SKILL.md) | Orchestration spine — drives an issue through the chain to attested contract with resume detection + HITL exits. |
+| [`/triage`](../skills/triage/SKILL.md) | Funnel issues toward `ready-for-agent` with an Agent Brief comment. **Vendor-agnostic** — uses the active tracker adapter. AFK-eligibility-aware via `.afk/config.yml`. *(Renamed from `/linear-triage` in 0.3.0.)* |
+| [`/diagnose`](../skills/diagnose/SKILL.md) | Six-phase debugging discipline; Phase 1 builds the verifier the contract will use. AFK-aware tier handling. |
+| [`/feedback-loop`](../skills/feedback-loop/SKILL.md) | The 10-pattern catalog for constructing deterministic agent-runnable signals. Cited by `/diagnose`, `/draft-contract`, and Matt's `/tdd`. |
+| [`/draft-contract`](../skills/draft-contract/SKILL.md) | Lift a tracker issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens (G8 gate). |
+| [`/attest`](../skills/attest/SKILL.md) | Tier-scaled attestation checklist; writes `.afk/attestations/<id>.json` (the label handler reads it). |
+| [`/brief-to-contract`](../skills/brief-to-contract/SKILL.md) | Orchestration spine — drives an issue through the chain to attested contract with resume detection + HITL exits. |
 
 ### Tracker adapters
 
@@ -35,8 +35,8 @@ Loaded automatically by consumer skills based on `.afk/config.yml`'s
 
 | Adapter | Status | Notes |
 |---|---|---|
-| [`tracker-linear`](../tracker-linear/SKILL.md) | Shipped (default) | Full capability set. |
-| [`tracker-github`](../tracker-github/SKILL.md) | Shipped (Phase A2) | Triage end-to-end works; full chain blocks on Phase B schema migration. |
+| [`tracker-linear`](../skills/tracker-linear/SKILL.md) | Shipped (default) | Full capability set. |
+| [`tracker-github`](../skills/tracker-github/SKILL.md) | Shipped (Phase A2) | Triage end-to-end works; full chain blocks on Phase B schema migration. |
 | `tracker-jira`, `tracker-local-md` | Deferred | — |
 
 ---

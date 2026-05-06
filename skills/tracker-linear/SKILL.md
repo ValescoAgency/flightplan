@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # tracker-linear — Linear adapter
 
-Implements the [tracker adapter contract](../docs/adr/0001-tracker-adapter-contract.md)
+Implements the [tracker adapter contract](../../docs/adr/0001-tracker-adapter-contract.md)
 for [Linear](https://linear.app). Consumer skills load this adapter when
 `.afk/config.yml` declares `tracker: linear` (or omits the field — that
 defaults to `linear`).
@@ -157,10 +157,10 @@ against this adapter.
 
 ## References
 
-- [`../docs/adr/0001-tracker-adapter-contract.md`](../docs/adr/0001-tracker-adapter-contract.md)
+- [`../../docs/adr/0001-tracker-adapter-contract.md`](../../docs/adr/0001-tracker-adapter-contract.md)
   — the design decision this adapter implements.
 - [`./labels.yml`](./labels.yml) — label mapping (identity for Valesco).
-- [`../CONTEXT.md`](../CONTEXT.md) — canonical state machine and
+- [`../../CONTEXT.md`](../../CONTEXT.md) — canonical state machine and
   capability set.
 - [Linear MCP](https://github.com/linear/linear-mcp) — underlying
   MCP server.

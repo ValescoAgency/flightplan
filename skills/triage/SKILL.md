@@ -22,7 +22,7 @@ qualify. The Agent Brief is the payload.
 ## Tracker independence
 
 This skill speaks the canonical state machine and label vocabulary
-defined in [`CONTEXT.md`](../CONTEXT.md). All tracker operations
+defined in [`CONTEXT.md`](../../CONTEXT.md). All tracker operations
 (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`,
 `set_status`) go through the **active tracker adapter**, resolved at
 session start by reading `.afk/config.yml`'s `tracker:` field.
@@ -363,9 +363,9 @@ When triaging an issue with prior triage activity:
 
 - [`../tracker-linear/SKILL.md`](../tracker-linear/SKILL.md) — current
   default adapter (Valesco repos).
-- [`../CONTEXT.md`](../CONTEXT.md) — canonical state machine, label
+- [`../../CONTEXT.md`](../../CONTEXT.md) — canonical state machine, label
   vocabulary, capability set.
-- [`../docs/adr/0001-tracker-adapter-contract.md`](../docs/adr/0001-tracker-adapter-contract.md)
+- [`../../docs/adr/0001-tracker-adapter-contract.md`](../../docs/adr/0001-tracker-adapter-contract.md)
   — the design decision behind the adapter abstraction.
 - [`../diagnose/SKILL.md`](../diagnose/SKILL.md) — downstream Bug
   reproduction skill.

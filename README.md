@@ -37,8 +37,8 @@ After install, skills are invocable as `flightplan:<skill-name>` (e.g.
   + Matt Pocock + Addy Osmani), with rationale.
 - [`docs/gaps.md`](docs/gaps.md) — open gaps, pipeline cross-references,
   closed gaps with ship dates.
-- `<skill-name>/SKILL.md` — Valesco-authored skills, one directory per
-  skill (Claude Code plugin convention).
+- `skills/<skill-name>/SKILL.md` — Valesco-authored skills, one
+  directory per skill (Claude Code plugin convention).
 
 ## Consumer skills
 
@@ -47,13 +47,13 @@ User-invoked skills that drive issues through the AFK chain. Vendor-agnostic
 
 | Skill | Purpose |
 |---|---|
-| [`/triage`](triage/SKILL.md) | Funnel issues toward `ready-for-agent` with an Agent Brief comment. AFK-eligibility-aware. *(Renamed from `/linear-triage` in 0.3.0.)* |
-| [`/diagnose`](diagnose/SKILL.md) | Six-phase debugging discipline; Phase 1 builds the verifier the goal-contract will use. |
-| [`/feedback-loop`](feedback-loop/SKILL.md) | The 10-pattern catalog for constructing deterministic agent-runnable signals. |
-| [`/draft-contract`](draft-contract/SKILL.md) | Lift a tracker issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens (§G8 gate). |
-| [`/attest`](attest/SKILL.md) | Tier-scaled attestation checklist; writes `.afk/attestations/<id>.json`. |
-| [`/brief-to-contract`](brief-to-contract/SKILL.md) | Orchestration spine — drives an issue from triage through to attested contract with resume detection + HITL exits. |
-| [`/run-attested`](run-attested/SKILL.md) | **v1 dogfood only** — manually invokes `@valesco/afk-runner` against an attested contract. Production runs go through the central label handler in v2 (see [VA-291](https://linear.app/valescoagency/issue/VA-291)). |
+| [`/triage`](skills/triage/SKILL.md) | Funnel issues toward `ready-for-agent` with an Agent Brief comment. AFK-eligibility-aware. *(Renamed from `/linear-triage` in 0.3.0.)* |
+| [`/diagnose`](skills/diagnose/SKILL.md) | Six-phase debugging discipline; Phase 1 builds the verifier the goal-contract will use. |
+| [`/feedback-loop`](skills/feedback-loop/SKILL.md) | The 10-pattern catalog for constructing deterministic agent-runnable signals. |
+| [`/draft-contract`](skills/draft-contract/SKILL.md) | Lift a tracker issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens (§G8 gate). |
+| [`/attest`](skills/attest/SKILL.md) | Tier-scaled attestation checklist; writes `.afk/attestations/<id>.json`. |
+| [`/brief-to-contract`](skills/brief-to-contract/SKILL.md) | Orchestration spine — drives an issue from triage through to attested contract with resume detection + HITL exits. |
+| [`/run-attested`](skills/run-attested/SKILL.md) | **v1 dogfood only** — manually invokes `@valesco/afk-runner` against an attested contract. Production runs go through the central label handler in v2 (see [VA-291](https://linear.app/valescoagency/issue/VA-291)). |
 
 ## Tracker adapters
 
@@ -64,8 +64,8 @@ active adapter is selected via `tracker:` in `.afk/config.yml` (default
 
 | Adapter | Status | Capabilities |
 |---|---|---|
-| [`tracker-linear`](tracker-linear/SKILL.md) | Shipped (default) | Full — customer field, project/cycle membership, team namespace, reliable active-work detection |
-| [`tracker-github`](tracker-github/SKILL.md) | Shipped (Phase A2) | Reduced — no customer field, best-effort active-work detection. Triage works end-to-end; full chain through `/draft-contract` waits on Phase B schema migration in `valesco-platform`. |
+| [`tracker-linear`](skills/tracker-linear/SKILL.md) | Shipped (default) | Full — customer field, project/cycle membership, team namespace, reliable active-work detection |
+| [`tracker-github`](skills/tracker-github/SKILL.md) | Shipped (Phase A2) | Reduced — no customer field, best-effort active-work detection. Triage works end-to-end; full chain through `/draft-contract` waits on Phase B schema migration in `valesco-platform`. |
 | `tracker-jira`, `tracker-local-md` | Deferred | — |
 
 This repo is its own dogfood for the GitHub adapter — see
