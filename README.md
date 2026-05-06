@@ -9,7 +9,7 @@ Primary consumer: the AFK (autonomous) coding governance pipeline at
 ## Install
 
 ```sh
-claude plugin marketplace add github:ValescoAgency/flightplan
+claude plugin marketplace add ValescoAgency/flightplan
 claude plugin install flightplan@valesco
 ```
 
