@@ -6,6 +6,23 @@ to develop software via **harness engineering and agent orchestration**.
 Primary consumer: the AFK (autonomous) coding governance pipeline at
 [`ValescoAgency/valesco-platform`](https://github.com/ValescoAgency/valesco-platform).
 
+## Install
+
+```sh
+claude plugin marketplace add github:ValescoAgency/flightplan
+claude plugin install valesco@valesco
+```
+
+For local development against a working clone:
+
+```sh
+claude plugin marketplace add /path/to/local/flightplan
+claude plugin install valesco@valesco
+```
+
+After install, skills are invocable as `valesco:<skill-name>` (e.g.
+`valesco:triage`, `valesco:draft-contract`, `valesco:brief-to-contract`).
+
 ## Contents
 
 - [`CONTEXT.md`](CONTEXT.md) — ubiquitous-language glossary for
