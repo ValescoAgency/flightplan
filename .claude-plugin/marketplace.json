@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "valesco",
+      "name": "flightplan",
       "description": "Skills bundle: /triage, /diagnose, /feedback-loop, /draft-contract, /attest, /brief-to-contract, /run-attested, plus tracker adapters (Linear, GitHub). Drives an issue from triage through goal-contract attestation, vendor-agnostic via the tracker adapter contract.",
       "category": "development",
       "source": "./",

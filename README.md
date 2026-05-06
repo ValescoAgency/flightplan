@@ -10,18 +10,18 @@ Primary consumer: the AFK (autonomous) coding governance pipeline at
 
 ```sh
 claude plugin marketplace add github:ValescoAgency/flightplan
-claude plugin install valesco@valesco
+claude plugin install flightplan@valesco
 ```
 
 For local development against a working clone:
 
 ```sh
 claude plugin marketplace add /path/to/local/flightplan
-claude plugin install valesco@valesco
+claude plugin install flightplan@valesco
 ```
 
-After install, skills are invocable as `valesco:<skill-name>` (e.g.
-`valesco:triage`, `valesco:draft-contract`, `valesco:brief-to-contract`).
+After install, skills are invocable as `flightplan:<skill-name>` (e.g.
+`flightplan:triage`, `flightplan:draft-contract`, `flightplan:brief-to-contract`).
 
 ## Contents
 

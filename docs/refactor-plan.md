@@ -55,7 +55,7 @@ A1 and B can run in parallel. A2 depends on A1. A3 depends on both.
   (default `linear`).
 - Existing consumer-skill behavior is unchanged for Linear-backed repos.
 - The slash command rename (`/linear-triage` → `/triage`) is a breaking
-  change. Plugin namespace prefix (`valesco:triage`) makes the canonical
+  change. Plugin namespace prefix (`flightplan:triage`) makes the canonical
   invocation unambiguous; bare `/triage` resolves to ours since Matt's
   is dropped from the adopted set.
 
