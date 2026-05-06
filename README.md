@@ -1,3 +1,7 @@
+<a href="https://valescoagency.com">
+  <img src="assets/va-bowtie-logo-primary.svg" alt="Valesco Agency" width="80" />
+</a>
+
 # ValescoAgency/flightplan
 
 Claude Code skills authored by or curated for [Valesco Agency](https://valescoagency.com)
