@@ -1,6 +1,6 @@
 {
   "name": "flightplan",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "description": "Valesco-authored Claude Code skills for harness engineering and agent orchestration around the AFK autonomous-coding governance pipeline. Vendor-agnostic via the tracker adapter contract — ships with Linear and GitHub Issues adapters at full capability against goal-contract schemaVersion 2.1.0. Bundles the orchestration spine (/brief-to-contract), harness skills (/diagnose, /feedback-loop), tracker funnel (/triage), goal-contract drafting (/draft-contract), tier-scaled attestation (/attest), and v1 dogfood runner (/run-attested). User-invoked, advisory skills only — pipeline code (validators, pre-flight, audit, label handler) lives in valesco-platform per the skills-vs-pipeline rule.",
   "author": {
     "name": "Valesco Agency",

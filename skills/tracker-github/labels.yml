@@ -1,33 +1,73 @@
 # GitHub Issues adapter — default label mapping.
 #
-# Format: <canonical name>: <vendor-native string>
+# Two equivalent entry forms are supported:
 #
-# GitHub's community-standard labels are lowercase and slightly
-# different from Valesco's canonical names. This file maps both ways.
-# Per-repo overrides land at `.afk/tracker-labels.yml` if a specific
-# repo uses different strings (e.g., `bug:prod` instead of `bug`).
+#   1. Object form (preferred for the canonical Valesco set):
+#        <canonical-name>:
+#          name: <vendor-native string>
+#          color: "<6-hex-char>"     # optional
+#          description: "<text>"     # optional
 #
-# See ../docs/adr/0001-tracker-adapter-contract.md for the three-layer
-# resolution rule (canonical → adapter default → per-repo override).
+#   2. Bare-string form (back-compat; preserved for per-repo overrides
+#      that don't care about cosmetics):
+#        <canonical-name>: <vendor-native string>
+#
+# The object form lets `apply_labels` lazily create missing labels on
+# first use with the right color and description (per VA-283). Bare-string
+# entries fall back to GitHub's default (gray, no description).
+#
+# GitHub's community-standard labels are lowercase and slightly different
+# from Valesco's canonical names. This file maps both ways. Per-repo
+# overrides land at `.afk/tracker-labels.yml` if a specific repo uses
+# different strings (e.g., `bug:prod` instead of `bug`).
+#
+# See ../../docs/adr/0001-tracker-adapter-contract.md for the three-layer
+# resolution rule (canonical → adapter default → per-repo override) and
+# ./SKILL.md § Lazy label creation for the existence-check + create-if-
+# missing flow `apply_labels` runs.
 
 # Category labels — every actively-triaged issue has exactly one.
 # GitHub's `bug` and `enhancement` labels exist by default on most
-# repos; `improvement` is non-standard and will be created by the
-# adapter on first use if absent.
+# repos; `improvement` is non-standard and the adapter creates it on
+# first use if absent.
 categories:
-  Bug: bug
-  Feature: enhancement
-  Improvement: improvement
+  Bug:
+    name: bug
+    color: "d73a4a"
+    description: "Something isn't working"
+  Feature:
+    name: enhancement
+    color: "a2eeef"
+    description: "New feature or request"
+  Improvement:
+    name: improvement
+    color: "0e8a16"
+    description: "Polish, refactor, or quality work on existing functionality"
 
 # State labels — at most one per issue. These match canonical names
 # directly; GitHub repos using the flightplan triage funnel will have
-# these labels created on first use.
+# these labels created on first use via the lazy-create flow.
 state_labels:
-  needs-info: needs-info
-  ready-for-agent: ready-for-agent
-  ready-for-human: ready-for-human
-  wontfix: wontfix
-  needs-triage: needs-triage
+  needs-info:
+    name: needs-info
+    color: "fbca04"
+    description: "Issue lacks information needed to proceed; awaiting reporter input"
+  ready-for-agent:
+    name: ready-for-agent
+    color: "1f883d"
+    description: "Agent Brief in place; AFK pre-flight should accept this issue"
+  ready-for-human:
+    name: ready-for-human
+    color: "fb6f1c"
+    description: "Out of AFK scope; a human should work this manually"
+  wontfix:
+    name: wontfix
+    color: "ffffff"
+    description: "Decided not to address this issue"
+  needs-triage:
+    name: needs-triage
+    color: "d4c5f9"
+    description: "Awaiting initial triage classification"
 
 # Status mapping — GitHub has no native status enum. The adapter
 # encodes the canonical state machine via a combination of issue
@@ -37,26 +77,50 @@ state_labels:
 # `state-encoding labels` is the set of labels that participate in
 # status: { triage, backlog, todo, in-progress, in-review, reviewed }.
 # When transitioning between OPEN canonical statuses, the adapter
-# strips other state-encoding labels and applies the new one.
+# strips other state-encoding labels and applies the new one (see
+# ./SKILL.md § Verifying the strip step).
+#
+# `state` and `state_reason` values are stored in lowercase here to
+# match the canonical normalization; `gh issue view` returns uppercase
+# (`OPEN`, `CLOSED`, `COMPLETED`) and the adapter lowercases on read
+# before mapping (per VA-286).
 statuses:
   triage:
     state: open
-    label: triage
+    label:
+      name: triage
+      color: "ededed"
+      description: "Awaiting initial triage classification (state-encoding label)"
   backlog:
     state: open
-    label: backlog
+    label:
+      name: backlog
+      color: "c5def5"
+      description: "Triaged and parked; not active work (state-encoding label)"
   todo:
     state: open
-    label: todo
+    label:
+      name: todo
+      color: "0e8a16"
+      description: "Brief in place; ready to be picked up (state-encoding label)"
   in-progress:
     state: open
-    label: in-progress
+    label:
+      name: in-progress
+      color: "fbca04"
+      description: "Active work in progress (state-encoding label)"
   in-review:
     state: open
-    label: in-review
+    label:
+      name: in-review
+      color: "5319e7"
+      description: "Under review (state-encoding label)"
   reviewed:
     state: open
-    label: reviewed
+    label:
+      name: reviewed
+      color: "1f883d"
+      description: "Review complete; ready for next stage (state-encoding label)"
   done:
     state: closed
     state_reason: completed

@@ -1,6 +1,6 @@
 ---
 name: tracker-github
-description: 'GitHub Issues adapter for flightplan''s tracker contract. Implements the canonical operations API (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`, `set_status`) using the `gh` CLI (or the GitHub MCP if loaded). Loaded by consumer skills (`/triage`, `/draft-contract`, `/brief-to-contract`, `/diagnose`) when `.afk/config.yml` declares `tracker: github`. Not invoked directly by users — this is the adapter the rest of flightplan reads from. Suitable for low-priority projects that don''t justify a Linear seat; the full AFK chain through `/draft-contract` is blocked on Phase B schema migration in `valesco-platform`, but `/triage` works end-to-end against GitHub today.'
+description: 'GitHub Issues adapter for flightplan''s tracker contract. Implements the canonical operations API (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`, `set_status`) using the `gh` CLI (or the GitHub MCP if loaded). Loaded by consumer skills (`/triage`, `/draft-contract`, `/brief-to-contract`, `/diagnose`) when `.afk/config.yml` declares `tracker: github`. Not invoked directly by users — this is the adapter the rest of flightplan reads from. Suitable for low-priority projects that don''t justify a Linear seat; runs the full AFK chain end-to-end against goal-contract schemaVersion 2.1.0 (Phase B unblocked the GitHub-shaped trackerIssueId).'
 disable-model-invocation: true
 ---
 
@@ -38,10 +38,12 @@ What works today against GitHub:
 - `/brief-to-contract` end-to-end (orchestration spine routes through
   the above)
 
-The constraint is intentional and registered in
-[`docs/refactor-plan.md`](../../docs/refactor-plan.md). Phase A1 (rename
-+ adapter contract) and Phase A2 (this adapter) ship independently of
-Phase B; the GitHub AFK chain becomes complete only when Phase B does.
+Phase A1 (rename + adapter contract) and Phase A2 (this adapter) shipped
+independently of Phase B; with Phase B's schema rename now landed
+upstream and consumed in flightplan 0.5.0 (per
+[VA-331](https://linear.app/valescoagency/issue/VA-331)), the GitHub AFK
+chain runs end-to-end. See [`docs/refactor-plan.md`](../../docs/refactor-plan.md)
+for the historical phasing.
 
 ## Capability declaration
 
@@ -89,10 +91,10 @@ The contract floor every adapter must implement.
 
 | Canonical operation | `gh` CLI | Notes |
 |---|---|---|
-| `fetch_issue(id)` | `gh issue view <num> --repo <owner/repo> --json number,title,body,state,stateReason,labels,assignees,milestone,projectItems,createdAt,updatedAt,closedAt,url` | Map to canonical shape: status from `state` + `stateReason` + state-encoding labels (see [Status mapping](#status-mapping)); category + state labels via [`labels.yml`](./labels.yml); preserve unknown labels as `extra_labels`. |
+| `fetch_issue(id)` | `gh issue view <num> --repo <owner/repo> --json number,title,body,state,stateReason,labels,assignees,milestone,projectItems,createdAt,updatedAt,closedAt,url` | Map to canonical shape: lowercase `state` and `stateReason` from `gh`'s GraphQL-enum output (`OPEN`/`CLOSED`/`COMPLETED`/etc.) before mapping (per VA-286). Status from normalized `state` + `stateReason` + state-encoding labels (see [Status mapping](#status-mapping)); category + state labels via [`labels.yml`](./labels.yml); preserve unknown labels as `extra_labels`. |
 | `list_comments(id)` | `gh issue view <num> --repo <owner/repo> --json comments` | Return each comment with `author.login`, `body`, ISO `createdAt`. |
 | `post_comment(id, body)` | `gh issue comment <num> --repo <owner/repo> --body-file -` (pipe body in) | Markdown is supported. Body is passed verbatim — disclaimer is the consumer's responsibility. |
-| `apply_labels(id, names)` | `gh issue edit <num> --repo <owner/repo> --add-label <name1> [--add-label <nameN>]` | Resolve canonical names → GitHub label strings via [`labels.yml`](./labels.yml). For removals (e.g., when transitioning state), use `--remove-label`. |
+| `apply_labels(id, names)` | `gh label list --repo <r> --json name` (existence check) → `gh label create --repo <r> --name <s> --color <c> --description <d>` for any missing label → `gh issue edit <num> --repo <r> --add-label <name1> [--add-label <nameN>]` | Resolve canonical names → GitHub label strings via [`labels.yml`](./labels.yml), then ensure each target label exists on the repo (lazy-create with color + description from `labels.yml` if missing — see [Lazy label creation](#lazy-label-creation)), then apply. For removals (e.g., when transitioning state), use `--remove-label`. |
 | `set_status(id, name)` | composite — see [Status mapping](#status-mapping) | GitHub has no status enum; encode via state + state-encoding label. |
 
 Optional operations:
@@ -113,17 +115,26 @@ State-encoding labels are: `triage`, `backlog`, `todo`, `in-progress`,
 `in-review`, `reviewed`. Read these via `labels.yml` so per-repo
 overrides apply.
 
-| Canonical | GitHub `state` | `stateReason` | State-encoding label |
+> **Case normalization (per VA-286).** `gh issue view --json state,stateReason`
+> returns raw GraphQL enum values in **uppercase** (`OPEN`, `CLOSED`,
+> `COMPLETED`, `NOT_PLANNED`, `DUPLICATE`). The adapter **lowercases
+> these on read** before mapping against `labels.yml`'s lowercase form.
+> The table below is presented in the canonical (lowercase) form to
+> match `labels.yml` directly. On the write path, `gh issue close
+> --reason` accepts the same lowercase / human-readable strings, so no
+> normalization is needed there.
+
+| Canonical | `state` (normalized) | `stateReason` (normalized) | State-encoding label |
 |---|---|---|---|
-| `triage` | `OPEN` | — | `triage` |
-| `backlog` | `OPEN` | — | `backlog` |
-| `todo` | `OPEN` | — | `todo` |
-| `in-progress` | `OPEN` | — | `in-progress` |
-| `in-review` | `OPEN` | — | `in-review` |
-| `reviewed` | `OPEN` | — | `reviewed` |
-| `done` | `CLOSED` | `COMPLETED` | (none) |
-| `canceled` | `CLOSED` | `NOT_PLANNED` | (none) |
-| `duplicate` | `CLOSED` | `DUPLICATE` | (none) |
+| `triage` | `open` | — | `triage` |
+| `backlog` | `open` | — | `backlog` |
+| `todo` | `open` | — | `todo` |
+| `in-progress` | `open` | — | `in-progress` |
+| `in-review` | `open` | — | `in-review` |
+| `reviewed` | `open` | — | `reviewed` |
+| `done` | `closed` | `completed` | (none) |
+| `canceled` | `closed` | `not_planned` | (none) |
+| `duplicate` | `closed` | `duplicate` | (none) |
 
 `set_status` semantics:
 
@@ -138,14 +149,111 @@ overrides apply.
   transitioning to duplicate, the consumer skill should also post a
   comment linking the canonical issue *before* calling `set_status`.
 
+### Verifying the strip step
+
+The strip-on-transition step is structural — without it an issue can
+end up with multiple mutually-exclusive state-encoding labels (e.g.,
+both `triage` and `todo`), and `fetch_issue`'s reverse mapping then
+silently picks one by priority order, masking the bug.
+
+When dogfooding a new `set_status` implementation against a fresh
+repo (or auditing an existing one — per VA-285), exercise the strip
+code path explicitly:
+
+```bash
+# Setup: create a fixture issue carrying the `triage` state-encoding label
+gh issue create --repo <r> --title "fixture: state transition test" \
+  --body "verifying set_status strips priors" --label triage
+NUM=<issue-number>
+
+# Drive set_status("todo") via whatever consumer harness exercises the
+# adapter (e.g., /triage transitioning the issue forward).
+
+# Verify the strip happened
+gh issue view $NUM --repo <r> --json labels --jq '[.labels[].name]'
+# Expected: ["todo", ...]              <-- triage is gone
+# Bug if:    ["todo", "triage", ...]   <-- both present, set_status didn't strip
+```
+
+Repeat for every OPEN→OPEN transition pair the consumer exercises:
+`triage` → `backlog`, `triage` → `in-progress`, `backlog` → `todo`,
+`todo` → `in-progress`, `in-progress` → `in-review`, `in-review` →
+`reviewed`, etc. The implementation does not need to be tested for
+every pair if a single test exercises the general "strip all other
+state-encoding labels" code path — but the prose-level claim must be
+demonstrated, not assumed.
+
+For OPEN→CLOSED transitions (`done`, `canceled`, `duplicate`), the
+state-encoding label is **not** stripped — it records the last open
+status the issue reached, which is intentional and matches the
+documented `set_status` semantics above. Verify that too:
+
+```bash
+# Continuing from the fixture above (now at "todo")
+gh issue close $NUM --repo <r> --reason completed
+gh issue view $NUM --repo <r> --json state,stateReason,labels --jq '{state, stateReason, labels: [.labels[].name]}'
+# Expected: state CLOSED, stateReason COMPLETED, "todo" still in labels
+```
+
 `fetch_issue` reverse mapping:
 
-- If `state == OPEN`, find the first state-encoding label present
+- After `gh issue view --json state,stateReason`, **lowercase both
+  values** before any mapping. The rest of this section assumes
+  normalized inputs.
+- If `state == "open"`, find the first state-encoding label present
   (priority: `in-review`, `reviewed`, `in-progress`, `todo`, `backlog`,
   `triage`). If none, default to `triage`.
-- If `state == CLOSED`, map `stateReason` → canonical: `COMPLETED`
-  → `done`, `NOT_PLANNED` → `canceled`, `DUPLICATE` → `duplicate`.
+- If `state == "closed"`, map `stateReason` → canonical: `completed`
+  → `done`, `not_planned` → `canceled`, `duplicate` → `duplicate`.
   Treat unknown / null `stateReason` as `done`.
+
+## Lazy label creation
+
+GitHub repos arrive at the flightplan triage funnel with whatever
+labels their maintainers established — often nothing matching the
+canonical set the adapter relies on. `gh issue edit --add-label X`
+fails outright with `'X' not found` if `X` doesn't already exist on
+the repo. To make first-use seamless, `apply_labels` performs an
+existence-check + create-if-missing pass before any `gh issue edit`
+mutation:
+
+1. Resolve every canonical name in the request to its GitHub label
+   string via [`labels.yml`](./labels.yml) (with per-repo overrides
+   applied from `.afk/tracker-labels.yml`).
+2. Run `gh label list --repo <r> --json name` once and compare the
+   resolved strings against the result.
+3. For each missing string, look up the entry in `labels.yml` and
+   call:
+
+   ```
+   gh label create --repo <r> --name <s> --color <c> --description <d>
+   ```
+
+   pulling `color` and `description` from the entry's metadata.
+4. Once all target labels exist, run the original
+   `gh issue edit --add-label ...` invocation.
+
+If a `labels.yml` entry is the bare-string back-compat form
+(`needs-info: needs-info` rather than the object form with
+`color`/`description`), fall back to GitHub's default — create the
+label without specifying color or description (gray, no description).
+The richer object form is preferred for the canonical Valesco set;
+the bare form remains valid for per-repo overrides that don't care
+about cosmetics.
+
+The check is **per-`apply_labels` call**, not session-cached —
+`gh label list` is a single repo call, and caching introduces drift
+when the maintainer creates / renames a label out-of-band.
+
+Failure modes:
+
+- `gh label list` fails (no auth, no remote): refuse the call
+  loudly; the underlying `gh issue edit` would fail anyway.
+- `gh label create` fails (write permission denied): refuse and
+  surface — the caller doesn't have the access this adapter requires.
+- Color string is malformed (not 6-hex-char) or `gh` rejects it:
+  surface the specific entry's `labels.yml` value as the cause so
+  the maintainer fixes the manifest, not the issue.
 
 ## Active-work detection (best-effort)
 
@@ -224,15 +332,26 @@ catches a violation, file a bug against this adapter.
 
 - `fetch_issue` returns canonical status names (mapped through the
   table above), never raw `OPEN`/`CLOSED` strings.
+- `fetch_issue` lowercases `state` and `stateReason` from `gh`'s
+  GraphQL-enum output before mapping (per VA-286). A round-trip —
+  `fetch_issue(<id>)` → canonical status → `set_status(<canonical>)` —
+  produces the same `gh issue close --reason …` invocation that
+  closed the issue in the first place (or, for an open status, the
+  same `gh issue reopen` + `gh issue edit --add-label …` pair).
 - `list_comments` returns timestamps as ISO 8601, regardless of `gh`'s
   output shape (`gh` does ISO 8601 already, but the adapter normalizes
   on the off chance the format changes).
 - `apply_labels` only modifies labels that map to canonical names plus
   the state-encoding labels enumerated in the status mapping table.
   Non-canonical labels are preserved on read and untouched on write.
+- `apply_labels` lazily creates any missing canonical label on the
+  target repo before applying it (per VA-283 — see [Lazy label
+  creation](#lazy-label-creation)).
 - `set_status("triage")` always lands the issue in OPEN state with
   the `triage` state-encoding label, never just labels alone (state
   must be coherent).
+- `set_status` strips other state-encoding labels on OPEN→OPEN
+  transitions (per VA-285 — see [Verifying the strip step](#verifying-the-strip-step)).
 - ID format normalization always returns `<owner>/<repo>#<num>` form
   before performing operations, even if the input was bare `<num>`.
 
