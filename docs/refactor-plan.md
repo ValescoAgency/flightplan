@@ -12,8 +12,8 @@ and future vendors.
 |---|---|---|---|---|
 | **A1** | flightplan | Rename + Linear adapter extraction + ADR + CONTEXT.md | nothing | next |
 | **A2** | flightplan | `tracker-github` proof-of-concept (triage-only end-to-end) | A1 | follow-up |
-| **B** | valesco-platform | Schema v2: `linearIssueId` → `trackerIssueId`, regex broadening, label-handler update | independent of A | when GitHub AFK chain is real demand |
-| **A3** | flightplan | Skill sweep to use `trackerIssueId` (post-Phase B) | A1, B | post-B |
+| **B** | valesco-platform | Schema v2: `linearIssueId` → `trackerIssueId`, regex broadening, label-handler update | independent of A | ✅ shipped 2026-05-07 (VA-331; valesco-platform PR #40 + #68) |
+| **A3** | flightplan | Skill sweep to use `trackerIssueId` (post-Phase B) | A1, B | ✅ shipped 2026-05-07 (VA-331) |
 
 A1 and B can run in parallel. A2 depends on A1. A3 depends on both.
 
@@ -84,16 +84,23 @@ A1 and B can run in parallel. A2 depends on A1. A3 depends on both.
   end-to-end as the validation milestone.
 - Doc updates: starter-set, gaps register, workflow.md.
 
-**Known constraint** (acknowledged, documented):
+**Known constraint** (resolved by Phase B, 2026-05-07):
 
-- The full chain `/triage` → `/draft-contract` → `/attest` will reject
-  GitHub issue IDs at schema validation until Phase B lands. The
-  `tracker-github/SKILL.md` calls this out explicitly so users don't
-  hit the wall unprepared.
+- ~~The full chain `/triage` → `/draft-contract` → `/attest` will reject
+  GitHub issue IDs at schema validation until Phase B lands.~~ Phase B
+  shipped in VA-331; the schema now accepts both Linear-style and
+  GitHub-style IDs and the GitHub adapter is full-capability.
 
 ---
 
 ## Phase B — Schema v2 in `valesco-platform`
+
+> ✅ **Shipped 2026-05-07** in VA-331 (valesco-platform PR #40 + #68).
+> Schema bumped to v2.1.0 (the v2.0.0 rename plus a v2.1.0 bootstrap-mode
+> addition per governance §G14). The flightplan-side catchup —
+> `metadata.linearIssueId` → `metadata.trackerIssueId` across skills,
+> templates, and prose — landed in the same VA-331 PR, completing
+> Phase A3. The section below is preserved as historical context.
 
 **Repo**: `valesco-platform`. **Branch**: TBD when the work starts.
 
@@ -123,6 +130,12 @@ governance-bound.
 
 ## Phase A3 — Skill sweep post-Phase B
 
+> ✅ **Shipped 2026-05-07** in VA-331. The `linearIssueId` →
+> `trackerIssueId` sweep across flightplan skills (templates,
+> `attest/`, `state-machine.md`, prose, examples) landed in the same
+> PR as Phase B's flightplan-side catchup. The section below is
+> preserved as historical context.
+
 **Branch**: `chore/trackerIssueId-sweep`
 
 **Ships**:
@@ -149,7 +162,7 @@ governance-bound.
 |---|---|
 | Capability checks forgotten in consumer skills, leading to vendor-specific assumptions creeping back in | A1 includes an explicit capability-check pattern in each consumer skill; review checklist in PR description. |
 | Adapter prose drifts from operations contract over time | ADR-0001 is canonical; adapters reference back to it. Schema-typed contract (Option 2 from grilling) remains a future option if drift becomes a problem. |
-| Phase B never happens, A2 ships and confuses users at the `draft-contract` step | A2's `tracker-github/SKILL.md` documents the Phase B blocker explicitly; `/draft-contract` error message points at the gap. |
+| ~~Phase B never happens, A2 ships and confuses users at the `draft-contract` step~~ | ~~A2's `tracker-github/SKILL.md` documents the Phase B blocker explicitly; `/draft-contract` error message points at the gap.~~ Resolved 2026-05-07 — Phase B shipped in VA-331; `/draft-contract` accepts both Linear-style and GitHub-style IDs. |
 | Slash-command rename `/linear-triage` → `/triage` breaks user muscle memory | Plugin version bump (0.2.0 → 0.3.0) signals breaking change; README + starter-set call out the rename; `/linear-triage` removal is documented. |
 
 ## References

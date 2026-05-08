@@ -103,26 +103,30 @@ belong in `valesco-platform/afk/`.
   produces audit records that flow into the label handler. Hash-bound.
 - **Tracking**: none yet — research item.
 
-### Schema v2: `linearIssueId` → `trackerIssueId` (Phase B)
-
-- **Purpose**: Rename `metadata.linearIssueId` → `metadata.trackerIssueId`
-  in `goal-contract.v1.json` and `attestation-record.v1.json`; broaden
-  the ID regex from `^[A-Z]{2,6}-\d+$` to also accept GitHub-style
-  `owner/repo#NNN` and arbitrary string IDs that satisfy a length floor.
-  Update label handler to read v2. Migrate any in-flight records.
-- **Why pipeline**: Schema authority + label handler logic.
-- **Trigger**: Real demand for AFK chains on non-Linear repos. Don't
-  ship preemptively — the migration cost is real, and it's
-  governance-bound. See
-  [`refactor-plan.md`](./refactor-plan.md#phase-b--schema-v2-in-valesco-platform).
-- **Tracking**: TBD — open in `valesco-platform` when needed.
-- **Phase A3 cleanup**: once Phase B lands, sweep skills to use the new
-  field name (`attest`'s filename pattern, `state-machine.md` rules,
-  prose).
-
 ---
 
 ## Closed gaps
+
+### Schema v2 + Phase A3 sweep — shipped 2026-05-07
+
+- **Ships** (valesco-platform): `goal-contract.v2.json` and
+  `attestation-record.v2.json` with `metadata.trackerIssueId` (replacing
+  `metadata.linearIssueId`); ID regex broadened to accept GitHub-style
+  `owner/repo#NNN`. Label handler reads v2. Schema bumped again to
+  v2.1.0 to add bootstrap-mode (governance §G14) for foundation-slice
+  contracts on green-field repos.
+- **Ships** (flightplan): `linearIssueId` → `trackerIssueId` swept
+  across skills (`attest/`, `draft-contract/template.yml`,
+  `state-machine.md`, prose, examples); skills set `schemaVersion:
+  "2.1.0"` and surface the bootstrap fields. This collapsed Phases B
+  and A3 into one PR.
+- **Tracking**: [VA-331](https://linear.app/valescoagency/issue/VA-331)
+  (flightplan PR #22); valesco-platform PR #40 (schema v2) + PR #68
+  (bootstrap-mode v2.1.0).
+- **Notes**: The full AFK chain through `/draft-contract` and downstream
+  now accepts both Linear-style (`VA-123`) and GitHub-style
+  (`owner/repo#NNN`) IDs. The Phase A2 GitHub adapter is full-capability
+  as a result.
 
 ### `tracker-github` adapter (Phase A2) — shipped 2026-05-01
 
@@ -141,10 +145,10 @@ belong in `valesco-platform/afk/`.
 - **Active-work detection**: heuristic — open issue + (linked PR via
   timeline OR has assignee). `/triage` warns but doesn't refuse on
   best-effort detection.
-- **Constraint** (still open): the full AFK chain through
+- **Constraint** (resolved 2026-05-07): ~~the full AFK chain through
   `/draft-contract` and downstream rejects GitHub-shaped IDs
-  (`owner/repo#NNN`) at schema validation. `/triage` works
-  end-to-end against GitHub today; the rest waits on Phase B.
+  (`owner/repo#NNN`) at schema validation.~~ Phase B shipped in
+  VA-331; the GitHub adapter is now full-capability end-to-end.
 - **Validation milestone**: walk one real low-priority GitHub-Issues
   repo through `/triage` end-to-end before declaring this
   battle-tested. The `flightplan` repo itself is a fine first
@@ -160,7 +164,8 @@ belong in `valesco-platform/afk/`.
   PR A1 (this PR — implementation).
 - **Notes**: Phase A1 of the rollout in
   [`refactor-plan.md`](./refactor-plan.md). Phase A2 (`tracker-github`)
-  registered above; Phase B (schema migration) registered above.
+  registered above; Phase B (schema migration) shipped 2026-05-07 in
+  VA-331 — see "Schema v2 + Phase A3 sweep" below.
   Capabilities baseline: `customer_field`, `project_membership`,
   `cycle_membership`, `team_namespace`, `active_work_detection`.
 
@@ -221,8 +226,9 @@ belong in `valesco-platform/afk/`.
 - **Tracking**: [VA-160](https://linear.app/valescoagency/issue/VA-160).
 - **Notes**: Schema lives in `valesco-platform`
   ([VA-160](https://github.com/ValescoAgency/valesco-platform/pull/31)).
-  Records keyed by `linearIssueId`; `attestedContentSha` is raw-bytes
-  sha. The label handler re-computes and rejects on drift.
+  Records keyed by `trackerIssueId` (post-VA-331; previously
+  `linearIssueId` in v1); `attestedContentSha` is raw-bytes sha. The
+  label handler re-computes and rejects on drift.
 
 ### `/draft-contract` — shipped 2026-04-22
 
