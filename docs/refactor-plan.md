@@ -10,8 +10,8 @@ and future vendors.
 
 | Phase | Repo | Scope | Depends on | Status |
 |---|---|---|---|---|
-| **A1** | flightplan | Rename + Linear adapter extraction + ADR + CONTEXT.md | nothing | next |
-| **A2** | flightplan | `tracker-github` proof-of-concept (triage-only end-to-end) | A1 | follow-up |
+| **A1** | flightplan | Rename + Linear adapter extraction + ADR + CONTEXT.md | nothing | ✅ shipped 2026-05-01 (PR #6 + #7) |
+| **A2** | flightplan | `tracker-github` proof-of-concept (triage-only end-to-end) | A1 | ✅ shipped 2026-05-01 (PR #9) |
 | **B** | valesco-platform | Schema v2: `linearIssueId` → `trackerIssueId`, regex broadening, label-handler update | independent of A | ✅ shipped 2026-05-07 (VA-331; valesco-platform PR #40 + #68) |
 | **A3** | flightplan | Skill sweep to use `trackerIssueId` (post-Phase B) | A1, B | ✅ shipped 2026-05-07 (VA-331) |
 
