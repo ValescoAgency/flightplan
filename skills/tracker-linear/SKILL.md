@@ -100,13 +100,14 @@ Linear issue IDs are `<TEAM>-<N>` — e.g., `VA-87`, `MREG-12`.
 The pattern `^[A-Z]{2,6}-\d+$` matches.
 
 This format is also the value `draft-contract` writes into
-`metadata.linearIssueId` and the value `attest` uses as the filename
-for `.afk/attestations/<linearIssueId>.json`. The schema field name
-`linearIssueId` is unchanged in this rollout — it will be renamed to
-`trackerIssueId` only when the Phase B v2 schema migration in
-`valesco-platform` lands. Until then, this adapter populates that field
-with Linear's native ID format and the GitHub adapter (when authored)
-will not be able to drive the full chain past `/draft-contract`.
+`metadata.trackerIssueId` and the value `attest` uses as the filename
+for `.afk/attestations/<trackerIssueId>.json`. The schema field was
+named `linearIssueId` pre-schemaVersion 2.0.0; the v1→v2 migration in
+`valesco-platform` (PRs [#40](https://github.com/ValescoAgency/valesco-platform/pull/40)
+and [#68](https://github.com/ValescoAgency/valesco-platform/pull/68))
+renamed it to `trackerIssueId` and unblocked the GitHub adapter for the
+full chain. This adapter continues to populate the field with Linear's
+native ID format.
 
 ## Linear MCP cheatsheet
 
@@ -141,7 +142,7 @@ against this adapter.
 ## What this adapter does NOT do
 
 - **No goal-contract knowledge.** Schema field names like
-  `linearIssueId` belong to consumer skills (and to
+  `trackerIssueId` belong to consumer skills (and to
   `valesco-platform`'s schemas). The adapter just provides the issue
   ID; the consumer wraps it in whatever schema field is appropriate.
 - **No tier inference.** Tier is read from `.afk/config.yml`, not

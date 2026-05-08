@@ -73,12 +73,58 @@ Short version:
 | `intent.successCriteria` | Bullets under `## Acceptance`, `## Success criteria`, `## Test plan`. Lift each bullet as-is; strip trailing punctuation. |
 | `intent.nonGoals` | Bullets under `## Non-goals`, `## Out of scope`. |
 | `intent.anchors.docs[]` | URLs in the issue body that point at `.md`, `docs/`, ADR/PRD paths, or external doc hosts (Notion, Sanity, Obsidian). For each, compute a sha256 of the URL string itself as the `versionHash` placeholder — pre-flight will replace it with content hash. |
-| `metadata.linearIssueId` | The tracker's canonical issue identifier — the adapter returns whatever the vendor's native form is. **Schema field name is unchanged in this rollout** (still `linearIssueId`); the active Linear adapter populates it with `TEAM-NNN`. The GitHub adapter (when authored) cannot use this field until the Phase B v2 schema migration in `valesco-platform` lands — see [`../../docs/refactor-plan.md`](../../docs/refactor-plan.md). |
+| `metadata.trackerIssueId` | The tracker's canonical issue identifier — the adapter returns whatever the vendor's native form is. **Renamed from `linearIssueId` at schemaVersion 2.0.0** (per [#40](https://github.com/ValescoAgency/valesco-platform/pull/40) / [#68](https://github.com/ValescoAgency/valesco-platform/pull/68)). The Linear adapter populates it with `TEAM-NNN`; the GitHub adapter populates it with `owner/repo#NNN`. |
 | `metadata.created` | Current timestamp, ISO 8601. |
 
 If a section source is **missing** from the issue body, do not leave the
 field empty — emit a `<PLANNER_SUGGESTED:>` token describing what's
 expected. The skill must never silently drop an authority field.
+
+### Step 2.5 — detect foundation-slice (bootstrap-mode) candidates
+
+Before filling the template, decide whether this contract is a
+foundation slice. Bootstrap mode (governance plan §G14) exists for
+contracts whose `requiredPaths` target files that **do not yet exist**
+on the resolved tree — typical of "scaffold the repo", "stand up the
+schema", "wire the auth shell" slices on a new project.
+
+Bootstrap contracts have a different shape:
+
+- `requiredPaths` / `writePaths` may resolve to zero files at pre-flight,
+  OR resolve only to paths listed in
+  `afk/protected-paths/bootstrap-allowlist.yml`. The standard
+  "every-glob-must-match" rule is **inverted** under bootstrap.
+- `intent.anchors.interfaces` and `intent.anchors.configShapes` are
+  **forbidden** by the v2.1.0 schema — there is no codebase to anchor
+  against. Omit both keys entirely; do not emit empty arrays and do not
+  emit `<PLANNER_SUGGESTED:>` tokens.
+- `canaryPlan` is **optional even at Tier 1** under bootstrap (no live
+  traffic to canary against on a green-field repo).
+- `metadata.bootstrap: true` carries execution authority — flipping it
+  invalidates approval via `contractHash`. See
+  [`authority-fields.md`](./authority-fields.md).
+
+**Detection heuristic (advisory, not mechanical):**
+
+If, given the candidate `requiredPaths` extracted from the tracker
+issue, **every** glob would resolve to zero files against the current
+working tree, prompt the user:
+
+> The candidate `requiredPaths` for `<TRACKER_ID>` resolve to zero files
+> on the current tree. This is the bootstrap-mode signature (governance
+> §G14 — initial scaffolding for a new project).
+>
+> Set `metadata.bootstrap: true` and emit the bootstrap variant of the
+> template? (y/n — default `y` if every glob is unresolved)
+
+If the user confirms (or the heuristic is unambiguous), the skill emits
+the bootstrap variant; otherwise it emits the standard variant. Do not
+silently flip — the field is authority-bearing.
+
+If the heuristic is **partially** true (some globs resolve, some don't),
+do NOT auto-suggest bootstrap. Instead, surface the mixed state and let
+the user decide — partial resolution usually means a mis-scoped contract
+or a misnamed glob, not a foundation slice.
 
 ### Step 3 — fill the template
 
@@ -146,13 +192,16 @@ remains — this is the G8 structural gate. Intentional.
 Before printing the next-steps block, verify:
 
 - [ ] The written YAML parses.
-- [ ] `metadata.linearIssueId` matches the pattern `^[A-Z]{2,6}-\d+$`.
-      *(Until Phase B schema migration: this means the active adapter
-      must be Linear. GitHub adapter callers will fail this check; that
-      gap is registered in [`../../docs/refactor-plan.md`](../../docs/refactor-plan.md).)*
+- [ ] `schemaVersion` is the literal string `"2.1.0"`.
+- [ ] `metadata.trackerIssueId` matches the format the active adapter
+      returns (Linear: `^[A-Z]{2,6}-\d+$`; GitHub: `^[\w.-]+/[\w.-]+#\d+$`).
 - [ ] Every field listed in [`authority-fields.md`](./authority-fields.md) as
       "token-required when not derivable" is either a real value or contains
-      the literal string `<PLANNER_SUGGESTED:`.
+      the literal string `<PLANNER_SUGGESTED:`. Items marked
+      "forbidden under bootstrap" must be **absent** (key omitted, not empty
+      array) when `metadata.bootstrap` is `true`.
+- [ ] If `metadata.bootstrap === true`: `intent.anchors.interfaces` and
+      `intent.anchors.configShapes` keys are absent (not present-but-empty).
 - [ ] The file path ends with `.goal-contract.draft.yml`, never
       `.goal-contract.yml`.
 
@@ -181,7 +230,10 @@ not leave a malformed draft on disk.
   blocker explanation for non-Linear adapters.
 - `valesco-platform/docs/afk/governance-plan.md` §G8 (planner → main handoff)
 - `valesco-platform/docs/afk/intake.md` (full intake flow context)
-- `valesco-platform/afk/schemas/goal-contract.v1.json` (draft must validate
-  against this on schema-typed fields; token strings are accepted where the
-  field type is string or string-array)
+- `valesco-platform/afk/schemas/goal-contract.v2.json` (v2.1.0 — draft must
+  validate against this on schema-typed fields; token strings are accepted
+  where the field type is string or string-array)
 - `valesco-platform/afk/protected-paths/default.yml` (the hard-floor manifest)
+- `valesco-platform/afk/protected-paths/bootstrap-allowlist.yml` (paths a
+  bootstrap contract may legally pre-existing-touch)
+- `valesco-platform/docs/afk/governance-plan.md` §G14 (bootstrap-mode rationale)

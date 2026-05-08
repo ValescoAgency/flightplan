@@ -16,13 +16,15 @@ is loaded in the session (`mcp__plugin_engineering_github__*`), prefer
 its typed calls — they're faster and better-typed than `gh` for bulk
 queries. Use `gh` as the universal floor.
 
-## Phase B blocker — read this first
+## Phase B status — full chain unblocked
 
-Until `valesco-platform`'s schema v2 migration lands, the full AFK
-chain through `/draft-contract` and `/attest` will reject GitHub issue
-IDs at schema validation. The contract field `metadata.linearIssueId`
-has regex `^[A-Z]{2,6}-\d+$` — GitHub's `owner/repo#NNN` doesn't
-match.
+The Phase B v2 schema migration in `valesco-platform`
+([#40](https://github.com/ValescoAgency/valesco-platform/pull/40),
+[#68](https://github.com/ValescoAgency/valesco-platform/pull/68))
+renamed `metadata.linearIssueId` → `metadata.trackerIssueId` and
+relaxed the regex to accept the GitHub-shaped `owner/repo#NNN` form
+alongside Linear's `TEAM-NNN`. As of schemaVersion 2.0.0, the full AFK
+chain runs end-to-end against either tracker.
 
 What works today against GitHub:
 
@@ -30,13 +32,11 @@ What works today against GitHub:
   comments, OOS knowledge base, the full triage funnel)
 - `/diagnose` end-to-end (no schema dependencies)
 - `/feedback-loop` (no tracker dependencies)
-
-What does **not** work until Phase B lands:
-
-- `/draft-contract` (rejects the GitHub-shaped ID at schema validation)
-- `/attest` (depends on the contract being valid)
-- `/brief-to-contract` (orchestrates the above; will halt at the draft
-  step)
+- `/draft-contract` end-to-end (writes `metadata.trackerIssueId` with
+  the GitHub-shaped ID; v2.1.0 schema accepts it)
+- `/attest` end-to-end (record key is the GitHub-shaped ID)
+- `/brief-to-contract` end-to-end (orchestration spine routes through
+  the above)
 
 The constraint is intentional and registered in
 [`docs/refactor-plan.md`](../../docs/refactor-plan.md). Phase A1 (rename
@@ -239,10 +239,10 @@ catches a violation, file a bug against this adapter.
 ## What this adapter does NOT do
 
 - **No goal-contract knowledge.** The schema field
-  `metadata.linearIssueId` (its name unchanged in this rollout)
-  belongs to consumer skills and to `valesco-platform`'s schemas.
-  This adapter just provides the issue ID; the GitHub-shaped ID will
-  fail the existing regex until Phase B.
+  `metadata.trackerIssueId` (renamed from `linearIssueId` at
+  schemaVersion 2.0.0) belongs to consumer skills and to
+  `valesco-platform`'s schemas. This adapter just provides the issue
+  ID; the GitHub-shaped form is accepted by the v2 regex.
 - **No tier inference from GitHub metadata.** Tier comes from
   `.afk/config.yml`. (`projectTier: 1` repos using GitHub will
   trigger Tier 1 even though GitHub has no `customer_field` —

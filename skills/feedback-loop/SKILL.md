@@ -467,5 +467,5 @@ works" is the same as no loop — it pollutes downstream skills with noise.
   catalog; this skill is the expanded reference.
 - `valesco-platform/docs/afk/governance-plan.md` §G10 — Tier-1 verifier
   determinism rule.
-- `valesco-platform/afk/schemas/goal-contract.v1.json` — the
+- `valesco-platform/afk/schemas/goal-contract.v2.json` — the
   `verification.commands` field shape.

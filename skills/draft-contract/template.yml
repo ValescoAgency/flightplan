@@ -1,17 +1,31 @@
 # .goal-contract.draft.yml
-# Authored by /draft-contract from Linear issue <LINEAR_ID>.
+# Authored by /draft-contract from tracker issue <TRACKER_ID>.
 # This draft is NON-EXECUTABLE until every <PLANNER_SUGGESTED:> token is replaced
 # and the file is renamed to .goal-contract.yml.
 #
 # Pre-flight hard-rejects any .goal-contract.yml containing a
 # <PLANNER_SUGGESTED:> token per governance plan G8.
+#
+# Two variants live in this template, keyed on metadata.bootstrap:
+#   - Standard variant (default, metadata.bootstrap absent or false): every
+#     glob in scope.requiredPaths must resolve to ≥1 file at pre-flight, and
+#     intent.anchors.interfaces / configShapes are populated.
+#   - Bootstrap variant (metadata.bootstrap: true, foundation slices only):
+#     globs intentionally resolve to zero files (or only to entries in
+#     afk/protected-paths/bootstrap-allowlist.yml), anchors-interfaces and
+#     configShapes are FORBIDDEN by schema, canaryPlan is optional even at
+#     Tier 1. See valesco-platform docs/afk/governance-plan.md §G14.
 
-schemaVersion: "1.0.0"
+schemaVersion: "2.1.0"
 
 metadata:
-  linearIssueId: "<LINEAR_ID>"       # populated from skill argument
-  tier: 3                             # PLANNER_SUGGESTED: default; raise to 2/1 per risk
-  created: "<ISO_TIMESTAMP>"          # populated by skill
+  trackerIssueId: "<TRACKER_ID>"      # populated from skill argument; was linearIssueId pre-v2
+  tier: 3                              # PLANNER_SUGGESTED: default; raise to 2/1 per risk
+  created: "<ISO_TIMESTAMP>"           # populated by skill
+  # bootstrap: false                   # PLANNER_SUGGESTED: set true ONLY for foundation-slice
+                                       # contracts where requiredPaths target files that do not
+                                       # yet exist on the resolved tree. Authority-bearing per
+                                       # G14 — flipping it invalidates approval via contractHash.
   # approvedAt: populated at afk-ready label time; leave unset in draft
   # contractHash: populated by pre-flight after normalization; leave unset in draft
   # customer: REQUIRED when tier is 1. Uncomment and fill.
@@ -19,24 +33,27 @@ metadata:
 
 intent:
   description: |
-    <INTENT_DESCRIPTION_FROM_LINEAR>
+    <INTENT_DESCRIPTION_FROM_TRACKER>
   successCriteria:
-    - <SUCCESS_CRITERIA_FROM_LINEAR>
-  # nonGoals is optional per schema; include when the Linear issue has them
+    - <SUCCESS_CRITERIA_FROM_TRACKER>
+  # nonGoals is optional per schema; include when the tracker issue has them
   nonGoals:
-    - <NON_GOALS_FROM_LINEAR>
+    - <NON_GOALS_FROM_TRACKER>
   anchors:
+    # interfaces / configShapes are FORBIDDEN under metadata.bootstrap: true
+    # (no codebase to anchor to). Omit both keys entirely in the bootstrap
+    # variant; populate them in the standard variant.
     interfaces:
-      - "<PLANNER_SUGGESTED: list TypeScript interfaces or types the contract references; empty array if truly none>"
+      - "<PLANNER_SUGGESTED: list TypeScript interfaces or types the contract references; empty array if truly none. OMIT this key entirely under bootstrap.>"
     configShapes:
-      - "<PLANNER_SUGGESTED: list config objects (e.g. OAuthConfig, SupabaseConfig) the contract depends on; empty array if none>"
+      - "<PLANNER_SUGGESTED: list config objects (e.g. OAuthConfig, SupabaseConfig) the contract depends on; empty array if none. OMIT this key entirely under bootstrap.>"
     docs: []
-      # Populated from Linear-body URLs pointing at docs/ADR/PRD paths.
+      # Populated from tracker-body URLs pointing at docs/ADR/PRD paths.
       # Each entry: { url, versionHash, description? }. See schema.
 
 scope:
   requiredPaths:
-    - "<PLANNER_SUGGESTED: globs the agent is expected to touch; these must match real files at pre-flight. For migration contracts, supabase/migrations/** goes here, NOT merely in writePaths.>"
+    - "<PLANNER_SUGGESTED: globs the agent is expected to touch. Standard variant: each glob must match real files at pre-flight. For migration contracts, supabase/migrations/** goes here, NOT merely in writePaths. Bootstrap variant: each glob may resolve to zero files, OR only to entries in afk/protected-paths/bootstrap-allowlist.yml.>"
   writePaths:
     - "<PLANNER_SUGGESTED: globs the agent may modify; must include all requiredPaths. Default hard-floor + escalated-floor paths are never writable via this field.>"
   # protectedPaths is additive on top of the default floor. Leave unset unless
@@ -56,9 +73,11 @@ budget:
   # costEstimateUsd is populated by pre-flight — leave unset.
 
 terminationConditions:
-  - <TERMINATION_FROM_LINEAR_OR_TOKEN>
+  - <TERMINATION_FROM_TRACKER_OR_TOKEN>
 
-# canaryPlan is REQUIRED when metadata.tier is 1. Uncomment and author:
+# canaryPlan is REQUIRED when metadata.tier is 1 AND metadata.bootstrap !== true.
+# Under metadata.bootstrap: true the v2.1.0 schema relaxes this to optional even
+# at Tier 1 (no production traffic to canary against on a green-field repo).
 # canaryPlan:
 #   metrics:
 #     - "<PLANNER_SUGGESTED: e.g. error_rate, p95_latency>"

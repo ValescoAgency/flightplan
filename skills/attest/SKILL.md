@@ -7,7 +7,7 @@ description: Walk the human through the AFK attestation checklist for a `.goal-c
 
 Render the tier-scaled attestation checklist for the current repo's
 `.goal-contract.yml`, walk the user through it interactively, and write an
-attestation record to `.afk/attestations/<linearIssueId>.json`.
+attestation record to `.afk/attestations/<trackerIssueId>.json`.
 
 The afk-ready label handler reads this record, re-computes
 `attestedContentSha` against the current YAML, and refuses to promote the
@@ -45,19 +45,22 @@ the human has consciously walked through every authority-bearing claim.
    > regardless (G8 gate).
 
 3. **Schema validation.** Parse the YAML and validate against
-   `afk/schemas/goal-contract.v1.json` (from the valesco-platform repo —
-   either vendored locally or looked up via the repo's `.afk/` sibling).
-   Fail loudly on AJV errors and list them.
+   `afk/schemas/goal-contract.v2.json` (v2.1.0; from the valesco-platform
+   repo — either vendored locally or looked up via the repo's `.afk/`
+   sibling). Fail loudly on AJV errors and list them.
 
 4. **Tier 1 canary-plan check.** If `metadata.tier === 1` and
-   `canaryPlan` is missing, refuse:
+   `metadata.bootstrap !== true` and `canaryPlan` is missing, refuse:
 
    > Refusing to run. Tier 1 contracts require a canaryPlan block
    > (metrics, thresholds, rollbackTrigger, windowMinutes) per governance
    > plan G10. Author it before attesting.
 
+   Under `metadata.bootstrap === true` the v2.1.0 schema relaxes this to
+   optional even at Tier 1 (no live deployment to canary against — §G14).
+
 5. **Existing attestation check.** If
-   `.afk/attestations/<linearIssueId>.json` already exists:
+   `.afk/attestations/<trackerIssueId>.json` already exists:
 
    > Prior attestation exists at <path>, attested <attestedAt> with
    > `attestedContentSha` <sha>. Current YAML sha is <sha'>. {Match /
@@ -68,8 +71,11 @@ the human has consciously walked through every authority-bearing claim.
 ### Step 1 — load + introspect
 
 Read `.goal-contract.yml`, parse, and compute:
-- `linearIssueId` — from `metadata.linearIssueId`
+- `trackerIssueId` — from `metadata.trackerIssueId` (renamed from
+  `metadata.linearIssueId` at schemaVersion 2.0.0; fall back to the
+  legacy field for pre-2.0.0 contracts still in flight)
 - `tier` — from `metadata.tier`
+- `bootstrap` — from `metadata.bootstrap` (default `false`)
 - `attestedContentSha` — `"sha256:" + sha256(raw file bytes)` (no
   canonicalization; raw bytes is the contract per the keying decision)
 - `attester` — shell out to `git config user.name` and
@@ -108,7 +114,7 @@ the authoritative adversarial record lives in the audit store.
 
 ### Step 4 — write the record
 
-Write to `.afk/attestations/<linearIssueId>.json`. Use the shape in
+Write to `.afk/attestations/<trackerIssueId>.json`. Use the shape in
 [`record-reference.md`](./record-reference.md). Pretty-print with
 2-space indent; trailing newline.
 
@@ -125,8 +131,9 @@ and report the error. Never leave a malformed record on disk.
 ### Step 6 — print next steps
 
 ```
-Attestation written: .afk/attestations/<linearIssueId>.json
+Attestation written: .afk/attestations/<trackerIssueId>.json
   tier: <N>
+  bootstrap: <true | false>
   ticked: <count> / <total>
   skipped: <count> (rationales required)
   attestedContentSha: <first 12 hex chars>…
@@ -134,7 +141,8 @@ Attestation written: .afk/attestations/<linearIssueId>.json
 
 Next:
   1. Commit the attestation record to the scope PR branch.
-  2. Confirm the delay window has elapsed:
+  2. Confirm the delay window has elapsed (use the bootstrap row of
+     the matrix in checklist.md if metadata.bootstrap === true):
        • Tier 1 default: 15 min (30 min sensitive; 60 min meta-contract)
        • Tier 2 default: 5 min (15 min sensitive; 30 min meta-contract)
        • Tier 3 default: 0 min (5 min sensitive; 15 min meta-contract)
@@ -148,12 +156,15 @@ attestation — re-run `/attest` after every authority-bearing change.
 
 ## Self-validation before returning
 
-- [ ] `.afk/attestations/<linearIssueId>.json` exists and parses as JSON.
+- [ ] `.afk/attestations/<trackerIssueId>.json` exists and parses as JSON.
 - [ ] Record validates against `attestation-record.v1.json`.
 - [ ] `attestedContentSha` matches `sha256:` + sha256 of current
       `.goal-contract.yml` bytes.
 - [ ] Every `state: "skipped"` item has a non-empty `rationale`.
 - [ ] Every `state: "ticked"` item has no `rationale` field.
+- [ ] If `metadata.bootstrap === true`: the `bootstrap-claim-self-verifying`
+      item is `ticked` (not `skipped`). Bootstrap-mode contracts MUST have
+      this claim made positively, not waved away.
 
 If any check fails, delete the record and report the specific failure.
 
@@ -174,7 +185,7 @@ If any check fails, delete the record and report the specific failure.
 
 - `valesco-platform/afk/schemas/attestation-record.v1.json` (authoritative
   record shape)
-- `valesco-platform/afk/schemas/goal-contract.v1.json` (contract
+- `valesco-platform/afk/schemas/goal-contract.v2.json` (v2.1.0 — contract
   pre-validation)
 - `valesco-platform/docs/afk/governance-plan.md` §G1 (checklist rationale)
 - `valesco-platform/docs/afk/governance-plan.md` §7 (authority chain —

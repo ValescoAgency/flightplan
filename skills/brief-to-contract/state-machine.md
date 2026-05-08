@@ -15,8 +15,8 @@ Read in order. Stop at the first match.
 | # | Detection signal | Entry | Confirmation prompt |
 |---|---|---|---|
 | 1 | `.afk/config.yml` is missing OR `afkEligible: false` | Refuse | "This repo is a control plane (or unlinked). Routing to `/triage` for `ready-for-human`." |
-| 2 | `.afk/attestations/<linearIssueId>.json` exists AND its `attestedContentSha` matches `sha256:` + sha256 of current `.goal-contract.yml` bytes | Stage 8 | "Already attested for `<TEAM-NNN>`. Sha matches. Printing hand-off — confirm OK?" |
-| 3 | `.afk/attestations/<linearIssueId>.json` exists BUT sha does not match current YAML | Stage 7 | "Attestation exists but the YAML drifted (sha mismatch). I will re-attest. Confirm OK?" |
+| 2 | `.afk/attestations/<trackerIssueId>.json` exists AND its `attestedContentSha` matches `sha256:` + sha256 of current `.goal-contract.yml` bytes | Stage 8 | "Already attested for `<TEAM-NNN>`. Sha matches. Printing hand-off — confirm OK?" |
+| 3 | `.afk/attestations/<trackerIssueId>.json` exists BUT sha does not match current YAML | Stage 7 | "Attestation exists but the YAML drifted (sha mismatch). I will re-attest. Confirm OK?" |
 | 4 | `.goal-contract.yml` exists, no `<PLANNER_SUGGESTED:>` tokens, no attestation record | Stage 7 | "Contract authored, ready for attestation. Entering /attest. Confirm OK?" |
 | 5 | `.goal-contract.yml` exists AND any `<PLANNER_SUGGESTED:>` tokens remain | Refuse | "Contract has unreplaced tokens at lines `<list>`. Replace them, then re-run me. I will not auto-fill." |
 | 6 | Both `.goal-contract.yml` AND `.goal-contract.draft.yml` exist | Refuse | "Both files exist — that's a dangerous state. Pick one: keep the draft and delete the final, or vice versa. Then re-run." |
@@ -143,6 +143,23 @@ Tier reasoning the prompt should always cite:
 
 Single hit → escalate and ask. Multiple hits → escalate and ask, with
 all reasons listed.
+
+### Rule 14 — bootstrap-mode signal (advisory)
+
+The pre-flight verdict logic (`valid` / `stale_refreshable` /
+`invalid_requires_human`) is bootstrap-orthogonal — the state machine
+itself does not branch on `metadata.bootstrap`. But Rule 14's tier
+prompt should mention bootstrap when the brief's candidate
+`requiredPaths` look unresolvable on the current tree:
+
+> Heads-up: this brief reads as a foundation-slice candidate
+> (`requiredPaths` candidates resolve to zero files). `/draft-contract`
+> will prompt you to confirm `metadata.bootstrap: true` per
+> governance §G14. Bootstrap contracts have a different shape — see
+> the per-stage skill's Step 2.5.
+
+This is advisory only. Do not auto-set bootstrap; the field is
+authority-bearing and `/draft-contract` owns the prompt.
 
 ## Override rules
 
