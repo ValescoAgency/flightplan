@@ -1,9 +1,9 @@
 # CONTEXT.md
 
-Ubiquitous language for the flightplan plugin and the AFK pipeline it
-serves. Terms here are what skills, agents, and humans use to describe the
-domain. Implementation details (file paths, MCP names, framework choices)
-are out of scope — see the relevant `SKILL.md` files for those.
+Ubiquitous language for the flightplan plugin. Terms here are what skills,
+agents, and humans use to describe the domain. Implementation details
+(file paths, MCP names, framework choices) are out of scope — see the
+relevant `SKILL.md` files for those.
 
 Format follows Matt Pocock's
 [CONTEXT-FORMAT](https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/CONTEXT-FORMAT.md).
@@ -12,42 +12,35 @@ Update inline as terms become contested or sharpened during a
 
 ---
 
-## Pipeline domain
+## Workflow domain
 
-**AFK** — *Away From Keyboard.* The Valesco autonomous-coding governance
-pipeline that takes an attested goal-contract through pre-flight,
-runner dispatch, validation, and gated promotion. Lives in
-[`valesco-platform/afk/`](https://github.com/ValescoAgency/valesco-platform);
-flightplan skills feed it.
+**Runway** — the Valesco autonomous-coding CLI at
+[`ValescoAgency/runway`](https://github.com/ValescoAgency/runway). Reads
+issues from a tracker, calls `@ai-hero/sandcastle` per issue (Claude Code
+in Docker), runs an adversarial sub-agent review, and opens a PR. Trust
+comes from human PR review, not gates. Flightplan's skills feed runway
+indirectly by getting issues into a state where runway will pick them up.
 
-**Goal contract** — a `.goal-contract.yml` at a repo's root specifying
-intent, write paths, budget, success criteria, verifiers, and (Tier 1)
-canary plan. The contract is the agreement between the human and the AFK
-runner; pre-flight rejects malformed or under-specified contracts per §G8.
+**Sandcastle** — `@ai-hero/sandcastle`, the package runway uses to run
+Claude Code inside an isolated Docker sandbox per issue.
 
-**Attestation** — the human's act of confirming a goal-contract is ready
-for AFK execution. Produces a record at `.afk/attestations/<id>.json`
-keyed by issue ID and bound to the YAML bytes via SHA-256. The label
-handler refuses to promote on sha drift.
+**Claude Code** — the agent runtime running inside the sandbox.
+Implements whatever the issue describes; the issue body is the spec.
 
-**afk-ready** — the label that triggers pre-flight. Applied by the human,
-never by a skill, after the tier-appropriate delay window (§G1). Its
-application is the last conscious step before pipeline takeover.
+**Sub-agent review** — adversarial pass run by runway before opening the
+PR. Looks for the same things a careful human reviewer would: regressions,
+missing tests, scope creep, brittle patterns. Output goes in the PR body.
 
-**Tier** — `1` / `2` / `3`. Sets the determinism bar, delay window, and
-required artefacts. Tier 1 = production / client-critical (canary plan
-required). Tier 3 = prototype / side project.
-
-**HITL** — *Human In The Loop.* An issue or stage that requires human
-judgment and cannot become an AFK contract. Routed to `ready-for-human`
-rather than coerced toward AFK.
+**HITL** — *Human In The Loop.* An issue or stage that needs human
+judgment and shouldn't go to runway. Routed to `needs-human` rather than
+`Todo`.
 
 ## Tracker domain
 
 **Tracker** — the system where issues, comments, labels, and statuses
 live. For Valesco, that's Linear today; the adapter contract makes it
-swappable. Other supported targets (per the rollout plan): GitHub Issues
-(planned proof-of-concept), Jira (deferred), local markdown (deferred).
+swappable. Other supported targets: GitHub Issues (shipped), Jira
+(deferred), local markdown (deferred).
 
 **Tracker adapter** — the per-vendor module satisfying a uniform
 operations API for the rest of flightplan to call. Lives at
@@ -56,8 +49,9 @@ declares its capability set; consumer skills check capabilities before
 using vendor-specific features.
 
 **Active tracker** — the adapter selected at session start by reading
-`.afk/config.yml`'s `tracker:` field. Default `linear` if absent. Missing
-adapter SKILL.md = refuse and surface; no silent fallback.
+`.afk/config.yml`'s `tracker:` field, or by sniffing the working repo's
+git remote. Default `linear` if absent. Missing adapter SKILL.md =
+refuse and surface; no silent fallback.
 
 **Capability set** — the optional features an adapter declares.
 
@@ -75,14 +69,13 @@ protection on this capability.
 
 ## Process artefacts
 
-**Agent Brief** — the structured comment that tells an AFK runner what to
-build. Format lives in `triage/AGENT-BRIEF.md`; delivery happens via the
-active tracker's `post_comment`. Vendor-agnostic shape; only delivery
-differs per tracker.
+**Acceptance criteria** — the testable bullets in an issue body that
+runway / Claude Code reads as the spec for what to build. `/triage` makes
+sure these exist and are sharp before transitioning the issue to `Todo`.
 
 **Triage Notes** — the comment posted when an issue moves to `needs-info`.
-Lists what's established and the specific facts required to make the
-issue AFK-ready.
+Lists what's established and the specific facts the reporter needs to
+provide before the issue can move forward.
 
 **Out-of-scope KB** — `.out-of-scope/<concept>.md` files in the working
 repo, written when a Feature/Improvement is rejected. Future triage runs
@@ -94,10 +87,13 @@ Vocabulary that consumer skills use unchanged across vendors. Adapters
 translate to/from vendor-native names per `tracker-<provider>/labels.yml`,
 with optional per-repo override at `.afk/tracker-labels.yml`.
 
-**State labels**: `needs-triage`, `needs-info`, `ready-for-agent`,
-`ready-for-human`, `wontfix`.
+**State labels**: `needs-triage`, `needs-info`, `needs-human`, `wontfix`.
 
 **Category labels**: `Bug`, `Feature`, `Improvement`.
 
 **Status values**: `triage`, `backlog`, `todo`, `in-progress`,
 `in-review`, `done`, `canceled`, `duplicate`.
+
+`Todo` is the runway pickup state — issues in `Todo` with sharp
+acceptance criteria are what runway scans for. `needs-human` is the HITL
+exit; the issue stays open but routes to a human PR rather than runway.

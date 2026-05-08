@@ -1,6 +1,6 @@
 ---
 name: tracker-github
-description: 'GitHub Issues adapter for flightplan''s tracker contract. Implements the canonical operations API (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`, `set_status`) using the `gh` CLI (or the GitHub MCP if loaded). Loaded by consumer skills (`/triage`, `/draft-contract`, `/brief-to-contract`, `/diagnose`) when `.afk/config.yml` declares `tracker: github`. Not invoked directly by users — this is the adapter the rest of flightplan reads from. Suitable for low-priority projects that don''t justify a Linear seat; runs the full AFK chain end-to-end against goal-contract schemaVersion 2.1.0 (Phase B unblocked the GitHub-shaped trackerIssueId).'
+description: 'GitHub Issues adapter for flightplan''s tracker contract. Implements the canonical operations API (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`, `set_status`) using the `gh` CLI (or the GitHub MCP if loaded). Loaded by consumer skills (`/triage`, `/diagnose`) when `.afk/config.yml` declares `tracker: github`. Not invoked directly by users — this is the adapter the rest of flightplan reads from. Suitable for projects that don''t justify a Linear seat.'
 disable-model-invocation: true
 ---
 
@@ -16,34 +16,12 @@ is loaded in the session (`mcp__plugin_engineering_github__*`), prefer
 its typed calls — they're faster and better-typed than `gh` for bulk
 queries. Use `gh` as the universal floor.
 
-## Phase B status — full chain unblocked
+## What works today against GitHub
 
-The Phase B v2 schema migration in `valesco-platform`
-([#40](https://github.com/ValescoAgency/valesco-platform/pull/40),
-[#68](https://github.com/ValescoAgency/valesco-platform/pull/68))
-renamed `metadata.linearIssueId` → `metadata.trackerIssueId` and
-relaxed the regex to accept the GitHub-shaped `owner/repo#NNN` form
-alongside Linear's `TEAM-NNN`. As of schemaVersion 2.0.0, the full AFK
-chain runs end-to-end against either tracker.
-
-What works today against GitHub:
-
-- `/triage` end-to-end (label/status transitions, Agent Brief
-  comments, OOS knowledge base, the full triage funnel)
-- `/diagnose` end-to-end (no schema dependencies)
+- `/triage` end-to-end (label/status transitions, Triage Notes
+  comments, the OOS knowledge base, the full triage funnel)
+- `/diagnose` end-to-end (no tracker schema dependencies)
 - `/feedback-loop` (no tracker dependencies)
-- `/draft-contract` end-to-end (writes `metadata.trackerIssueId` with
-  the GitHub-shaped ID; v2.1.0 schema accepts it)
-- `/attest` end-to-end (record key is the GitHub-shaped ID)
-- `/brief-to-contract` end-to-end (orchestration spine routes through
-  the above)
-
-Phase A1 (rename + adapter contract) and Phase A2 (this adapter) shipped
-independently of Phase B; with Phase B's schema rename now landed
-upstream and consumed in flightplan 0.5.0 (per
-[VA-331](https://linear.app/valescoagency/issue/VA-331)), the GitHub AFK
-chain runs end-to-end. See [`docs/refactor-plan.md`](../../docs/refactor-plan.md)
-for the historical phasing.
 
 ## Capability declaration
 
@@ -61,9 +39,8 @@ capabilities:
 
 Consumer-skill consequences:
 
-- `/triage` will not recommend Tier 1 from GitHub-issue inputs
-  (`customer_field: false`). Tier 1 escalation in `/brief-to-contract`
-  must come from `.afk/config.yml`'s `projectTier: 1` explicitly.
+- `/triage` won't surface a customer for any consumer that wants one
+  (`customer_field: false`).
 - `/triage`'s read-only-on-active-work protection **warns instead of
   refusing** when about to mutate an issue that *might* be in active
   work — there's no reliable signal, only heuristics.
@@ -357,17 +334,12 @@ catches a violation, file a bug against this adapter.
 
 ## What this adapter does NOT do
 
-- **No goal-contract knowledge.** The schema field
-  `metadata.trackerIssueId` (renamed from `linearIssueId` at
-  schemaVersion 2.0.0) belongs to consumer skills and to
-  `valesco-platform`'s schemas. This adapter just provides the issue
-  ID; the GitHub-shaped form is accepted by the v2 regex.
-- **No tier inference from GitHub metadata.** Tier comes from
-  `.afk/config.yml`. (`projectTier: 1` repos using GitHub will
-  trigger Tier 1 even though GitHub has no `customer_field` —
-  `/brief-to-contract` will surface that the customer must come from
-  another source, e.g., the `.afk/config.yml` declaration.)
-- **No AFK-eligibility decisions.** Eligibility is consumer-side.
+- **No tracker-side knowledge of downstream pipelines** (runway,
+  sandcastle). The adapter just exposes the canonical operations.
+- **No tier inference from GitHub metadata.** If a project tier is
+  needed, it's read from `.afk/config.yml`.
+- **No HITL / runway-eligibility decisions.** Those are consumer-side
+  (`/triage`).
 - **No PR creation or branch operations.** This adapter only touches
   Issues. Pull-request work is out of scope.
 - **No GitHub Projects v2 integration.** Treat as orthogonal; revisit
@@ -379,9 +351,6 @@ catches a violation, file a bug against this adapter.
 
 - [`../../docs/adr/0001-tracker-adapter-contract.md`](../../docs/adr/0001-tracker-adapter-contract.md)
   — the design decision this adapter implements.
-- [`../../docs/refactor-plan.md`](../../docs/refactor-plan.md) — Phase A2
-  scope (this adapter); Phase B (schema migration that unblocks the
-  full chain).
 - [`./labels.yml`](./labels.yml) — label mapping for GitHub.
 - [`../tracker-linear/SKILL.md`](../tracker-linear/SKILL.md) — sibling
   adapter (full-capability reference implementation).

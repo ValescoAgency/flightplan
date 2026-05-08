@@ -1,6 +1,6 @@
 ---
 name: tracker-linear
-description: 'Linear adapter for flightplan''s tracker contract. Implements the canonical operations API (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`, `set_status`) by delegating to the Linear MCP. Loaded by consumer skills (`/triage`, `/draft-contract`, `/brief-to-contract`, `/diagnose`) when `.afk/config.yml` declares `tracker: linear` (the default). Not invoked directly by users — this is the adapter the rest of flightplan reads from.'
+description: 'Linear adapter for flightplan''s tracker contract. Implements the canonical operations API (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`, `set_status`) by delegating to the Linear MCP. Loaded by consumer skills (`/triage`, `/diagnose`) when `.afk/config.yml` declares `tracker: linear` (the default). Not invoked directly by users — this is the adapter the rest of flightplan reads from.'
 disable-model-invocation: true
 ---
 
@@ -83,7 +83,7 @@ nonstandard label strings.
 
 | Team key | Team name | Typical repos |
 |---|---|---|
-| `VA` | Valescoagency | `valesco-platform` (afkEligible: false), `flightplan`, `ffl-live-draft`, `styled-by-kb`, etc. |
+| `VA` | Valescoagency | `valesco-platform`, `flightplan`, `runway`, `ffl-live-draft`, `styled-by-kb`, etc. |
 | `MREG` | Mill Real Estate Group | `millsreg-sanity` |
 | `FMF` | FMF-Website | `fmf-website` |
 
@@ -99,15 +99,8 @@ are bots — never assign to them, never @-mention them in briefs.
 Linear issue IDs are `<TEAM>-<N>` — e.g., `VA-87`, `MREG-12`.
 The pattern `^[A-Z]{2,6}-\d+$` matches.
 
-This format is also the value `draft-contract` writes into
-`metadata.trackerIssueId` and the value `attest` uses as the filename
-for `.afk/attestations/<trackerIssueId>.json`. The schema field was
-named `linearIssueId` pre-schemaVersion 2.0.0; the v1→v2 migration in
-`valesco-platform` (PRs [#40](https://github.com/ValescoAgency/valesco-platform/pull/40)
-and [#68](https://github.com/ValescoAgency/valesco-platform/pull/68))
-renamed it to `trackerIssueId` and unblocked the GitHub adapter for the
-full chain. This adapter continues to populate the field with Linear's
-native ID format.
+This is the value consumer skills (and runway, downstream) use to
+identify the issue across systems.
 
 ## Linear MCP cheatsheet
 
@@ -141,14 +134,12 @@ against this adapter.
 
 ## What this adapter does NOT do
 
-- **No goal-contract knowledge.** Schema field names like
-  `trackerIssueId` belong to consumer skills (and to
-  `valesco-platform`'s schemas). The adapter just provides the issue
-  ID; the consumer wraps it in whatever schema field is appropriate.
-- **No tier inference.** Tier is read from `.afk/config.yml`, not
-  computed from Linear project metadata.
-- **No AFK-eligibility decisions.** Eligibility is a Valesco-doctrine
-  concern, owned by the consumer skill (`/triage`).
+- **No tracker-side knowledge of downstream pipelines** (runway,
+  sandcastle). The adapter just exposes the canonical operations.
+- **No tier inference.** If a project tier is needed, it's read from
+  `.afk/config.yml`, not computed from Linear project metadata.
+- **No HITL / runway-eligibility decisions.** Those are consumer-skill
+  concerns, owned by `/triage`.
 - **No PR / commit creation.** Linear has issue→PR linking; this
   adapter doesn't touch GitHub.
 - **No Linear-native features beyond the contract.** Linear has rich

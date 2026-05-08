@@ -1,23 +1,33 @@
 ---
 name: triage
-description: Funnel issues toward `ready-for-agent` so AFK can run them. Vendor-agnostic — works with whatever tracker the repo's `.afk/config.yml` declares (Linear today; GitHub Issues planned). Use when the user wants to work the inbox, prepare issues for an AFK run, decide which issues an agent can take vs. which require a human, or work the Triage queue. The Agent Brief comment posted on `ready-for-agent` is the input AFK pre-flight derives its contract from. Reach for this skill any time the user mentions triaging, classifying, or moving issues toward an AFK run — even if they don't explicitly say "triage."
+description: Funnel tracker issues into `Todo` with sharp acceptance criteria so runway will pick them up. Vendor-agnostic — works with whatever tracker the repo declares (Linear today; GitHub Issues shipped). Use when the user wants to work the inbox, prepare issues for a runway run, decide which issues an agent can take vs. which require a human, or work the Triage queue. Reach for this skill any time the user mentions triaging, classifying, or moving issues toward an autonomous run — even if they don't explicitly say "triage."
 ---
 
-# /triage — AFK funnel
+# /triage — runway funnel
 
-The purpose of this skill is to **prepare tracker issues for AFK runs**.
-Every triage decision answers one question:
+The purpose of this skill is to **prepare tracker issues for runway**.
+runway scans the tracker for issues in `Todo`, hands each one to
+`@ai-hero/sandcastle` (Claude Code in Docker), runs an adversarial
+sub-agent review, and opens a PR. Trust comes from human PR review, not
+from upstream gates.
 
-> *Can this issue become a goal-contract that AFK pre-flight will accept?*
+So every triage decision answers one question:
 
-If yes → produce an **Agent Brief** and apply `ready-for-agent`.
+> *Is this issue body sharp enough that Claude Code, reading nothing but
+> the issue, will produce a PR a human is happy to review?*
+
+If yes → ensure acceptance criteria are present and move the issue to
+`Todo`.
 If not yet → identify what's missing and either ask the reporter
 (`needs-info`) or park it (`backlog`).
-If never → eject it cleanly: `ready-for-human`, `canceled`, or
-`duplicate`.
+If never → eject it cleanly: `needs-human`, `canceled`, or `duplicate`.
 
-The other outcomes are **filters** that remove issues which don't
-qualify. The Agent Brief is the payload.
+The Agent-Brief-as-comment pattern is gone. **runway reads the issue
+body directly** — there's no separate brief artifact for it to consume.
+Triage's deliverable is a *good issue body*, in place. If the body needs
+work, edit the body. If acceptance criteria are missing, post a Triage
+Notes comment asking the reporter, but the source of truth Claude Code
+sees is still the body itself.
 
 ## Tracker independence
 
@@ -25,7 +35,8 @@ This skill speaks the canonical state machine and label vocabulary
 defined in [`CONTEXT.md`](../../CONTEXT.md). All tracker operations
 (`fetch_issue`, `list_comments`, `post_comment`, `apply_labels`,
 `set_status`) go through the **active tracker adapter**, resolved at
-session start by reading `.afk/config.yml`'s `tracker:` field.
+session start by reading `.afk/config.yml`'s `tracker:` field (default
+`linear` if absent).
 
 | `tracker:` value | Adapter |
 |---|---|
@@ -52,32 +63,8 @@ exposes for comments. The text itself is vendor-agnostic.
 
 ## Reference docs
 
-- [`AGENT-BRIEF.md`](AGENT-BRIEF.md) — durable Agent Brief format
-  aligned to the AFK goal-contract schema
 - [`OUT-OF-SCOPE.md`](OUT-OF-SCOPE.md) — `.out-of-scope/` knowledge
-  base for ejected concepts
-
-## AFK eligibility — the first gate
-
-Before recommending any state, read `.afk/config.yml` at the working
-repo root.
-
-| Field | Meaning for triage |
-|---|---|
-| `afkEligible: false` | The repo is a control plane. **`ready-for-agent` is unavailable.** All actionable issues route to `ready-for-human`. |
-| `afkEligible: true` + `projectTier: 1` | Production / client-critical. Briefs must enable a Tier-1 contract — require `customer` (if the adapter declares `customer_field`) and a `canaryPlan`. |
-| `afkEligible: true` + `projectTier: 2` | Internal tools / staging. Standard brief. No canary required. |
-| `afkEligible: true` + `projectTier: 3` | Prototype / side project. Standard brief, but note the `tierExpires` date if set. |
-
-**Hard rule:** `valesco-platform` is `afkEligible: false` per governance
-plan §14.3 (the AFK control plane cannot rewrite its own policies).
-Issues filed against it can move to `ready-for-human` but **never** to
-`ready-for-agent`. State this up front whenever a `valesco-platform`
-issue is on the table.
-
-If `.afk/config.yml` is missing in an otherwise-active repo, treat that
-as the first thing to fix — surface it to the maintainer rather than
-guessing.
+  base for ejected concepts.
 
 ## Capability checks
 
@@ -86,7 +73,6 @@ declaration:
 
 | Capability | Used by triage when |
 |---|---|
-| `customer_field` | Recommending Tier 1 — the Brief must include `customer` |
 | `team_namespace` | Filtering issues to the active team's namespace |
 | `project_membership` | Showing project-scoped queues |
 | `cycle_membership` | Showing cycle-scoped queues |
@@ -107,7 +93,7 @@ The skill speaks these values; the adapter maps to vendor-native names.
 |---|---|
 | `triage` | Incoming. Has not been classified or has open questions. |
 | `backlog` | Ejected from active triage but not killed. Will revisit later. |
-| `todo` | **AFK-ready or human-ready.** Has a Brief comment. |
+| `todo` | **Ready for runway, or marked `needs-human` for a human.** Acceptance criteria are sharp. |
 | `in-progress` / `in-review` / `reviewed` | Active work. Off-limits to this skill — read-only. |
 | `done` | Closed normally. |
 | `canceled` | Won't fix. Permanent ejection. |
@@ -117,9 +103,8 @@ The skill speaks these values; the adapter maps to vendor-native names.
 
 | Label | Meaning |
 |---|---|
-| `needs-info` | Specific, named information is missing — without it we cannot construct a goal-contract. Status stays `triage`. |
-| `ready-for-agent` | An Agent Brief comment exists. AFK pre-flight should accept it. Status moves to `todo`. **The funnel destination.** |
-| `ready-for-human` | Cannot become AFK-eligible (governance gate, prod access, judgment that doesn't reduce to acceptance criteria). Status moves to `todo`. |
+| `needs-info` | Specific, named information is missing — without it the issue body isn't sharp enough for runway. Status stays `triage`. |
+| `needs-human` | Cannot become runway-eligible (production access, judgment that doesn't reduce to acceptance criteria, cross-team coordination). Status moves to `Todo` so the human picks it up; runway skips issues carrying this label. |
 
 ### Category labels (apply exactly one)
 
@@ -138,23 +123,22 @@ The skill speaks these values; the adapter maps to vendor-native names.
 
 ## State machine
 
-The funnel direction is **toward `ready-for-agent`**. Each transition
-either advances toward it, parks the issue, or ejects it.
+The funnel direction is **toward `Todo`**. Each transition either
+advances toward it, parks the issue, or ejects it.
 
 | From | To | Direction | Trigger | Action |
 |---|---|---|---|---|
 | New (`triage`, no labels) | + category, stays `triage` | enter | Skill on first look | Apply category, post recommendation comment. |
-| `triage` | + `needs-info` | park | Maintainer (skill) | Specific missing info named. Skill posts Triage Notes with what's blocking the brief. |
-| `triage` / `needs-info` | `todo` + `ready-for-agent` | **advance** | Maintainer (skill, after grilling) | Skill writes Agent Brief, removes `needs-info` if present, applies label, moves status. |
-| `triage` / `needs-info` | `todo` + `ready-for-human` | eject | Maintainer (skill) | Brief documents *why human, not agent*. Same shape as Agent Brief plus the reason. |
+| `triage` | + `needs-info` | park | Maintainer (skill) | Specific missing info named. Skill posts Triage Notes with what's blocking. |
+| `triage` / `needs-info` | `todo` (no state label) | **advance** | Maintainer (skill, after grilling) | Skill ensures the issue body has sharp acceptance criteria, removes `needs-info` if present, moves status to `Todo`. runway picks up from here. |
+| `triage` / `needs-info` | `todo` + `needs-human` | eject (HITL) | Maintainer (skill) | Body is sharp but reasons exist not to use runway (production access, judgment calls). Status moves to `Todo`; the `needs-human` label tells runway to skip. |
 | `triage` / `needs-info` | `backlog` | park | Maintainer (skill) | Acknowledged but deferred. Brief reasoning posted. |
 | `triage` / `needs-info` | `canceled` | eject | Maintainer (skill) | Polite explanation. For `Feature`/`Improvement`, write `.out-of-scope/<concept>.md`. |
 | `triage` / `needs-info` | `duplicate` | eject | Maintainer (skill) | Comment links the canonical issue. |
 | `needs-info` | back to `triage` for re-evaluation | advance | Skill (detects new reporter activity) | Reporter has commented since the last Triage Notes — re-evaluate. |
 
 The maintainer can override directly via "Quick state override" below;
-the skill should still flag unusual transitions (e.g., `triage` →
-`done` skipping `todo` is suspicious).
+the skill should still flag unusual transitions.
 
 ## Invocation
 
@@ -163,10 +147,10 @@ language. The active tracker is resolved silently from `.afk/config.yml`.
 
 Examples:
 
-- "What's closest to AFK-ready?"
+- "What's closest to ready for runway?"
 - "Show me what needs attention"
 - "Let's look at issue 87"  (or `VA-87`, or `owner/repo#42` — depends on tracker)
-- "Move issue 42 to ready-for-agent"
+- "Move issue 42 to Todo"
 - "Anything blocked on the reporter for over a week?"
 
 If the tracker has a team-namespace concept and the namespace is
@@ -174,15 +158,15 @@ ambiguous, ask once: "Which team?" Then continue.
 
 ## Workflow: show what needs attention
 
-Order the queue by **distance to AFK-ready**, not by age. The user's
+Order the queue by **distance to runway-ready**, not by age. The user's
 time is best spent on issues nearest the funnel exit.
 
 Query the adapter (scoped per the adapter's capabilities) and group
 results:
 
 1. **Promotable** — `triage` with category, body has clear
-   current/desired behavior, only missing the Agent Brief itself. (Skill
-   should offer to draft the brief inline.)
+   current/desired behavior, only missing sharp acceptance criteria.
+   (Skill should offer to draft them inline by editing the body.)
 2. **`needs-info` with new activity** — reporter has commented since
    the most recent Triage Notes. Could now be promotable. (Compare
    comment timestamps via `list_comments`.)
@@ -200,32 +184,28 @@ body. Show counts per bucket. Let the maintainer pick.
 
 - `fetch_issue(<id>)` — body, labels, project, status, dates
 - `list_comments(<id>)` — every comment with author + timestamp
-- Parse any prior Triage Notes / Agent Brief comments authored by this
-  skill (they begin with the AI disclaimer) to recover prior progress
-- **Read `.afk/config.yml`** — establish AFK eligibility and tier
-  *before* recommending anything
+- Parse any prior Triage Notes comments authored by this skill (they
+  begin with the AI disclaimer) to recover prior progress
 - Read all `.out-of-scope/*.md` files and check for matching concepts
 - For non-trivial cases, use `Agent` with `subagent_type=Explore` to
   find related code, types, tests, and recent history
 
 ### Step 2 — present a recommendation
 
-Lead with the AFK question:
+Lead with the runway question:
 
-> **Can this become AFK-eligible? What's blocking it?**
+> **Can Claude Code, reading only this issue body, produce a PR a human
+> would be happy to review? What's missing?**
 
 Then state:
 
-- **AFK eligibility** — `afkEligible: true/false`, tier (`1`/`2`/`3`),
-  customer if Tier 1 (when adapter declares `customer_field`),
-  sensitive-path flags (auth/migrations/billing). For `valesco-platform`,
-  surface §14.3 explicitly.
 - **Category** — `Bug` / `Feature` / `Improvement`, with reasoning.
 - **State recommendation** — one of the canonical state labels or
   status moves, with reasoning.
-- **Distance to AFK-ready** — if recommending `needs-info`, name the
-  *specific* facts the goal-contract needs that the issue currently
-  lacks (success criteria, anchors, paths, tier inputs).
+- **What the body is missing** — if recommending `needs-info`, name the
+  *specific* facts that the body needs: a clear current behavior, a
+  clear desired behavior, testable acceptance criteria, repro steps for
+  bugs.
 - **Out-of-scope match** — "This looks like
   `.out-of-scope/<name>.md` — we rejected this before because X. Same
   call?"
@@ -244,27 +224,26 @@ six-phase loop, or do a lightweight repro check inline:
 - Read the reporter's reproduction steps
 - Trace relevant code paths
 - Try to reproduce: run tests, execute commands, narrow the failure
-- **Reproduced** — capture the observation. This becomes the brief's
-  *Current behavior* and shapes the success criteria.
+- **Reproduced** — capture the observation. This becomes the body's
+  *Current behavior* and shapes the acceptance criteria.
 - **Could not reproduce** — say so. May be environment-specific,
   already fixed, or misreported.
 - **Insufficient detail to attempt** — strong signal for `needs-info`.
 
 ### Step 4 — grilling session (if needed)
 
-If the issue cannot yet produce a complete brief, run a
+If the body is too vague to hand to runway, run a
 [`/grill-with-docs`](https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md)
-session targeted at filling the goal-contract gaps:
+session targeted at the gaps:
 
-- An `intent.description` (≥ 20 chars, durable, no file paths)
-- At least one concrete `successCriteria` entry (≥ 5 chars, testable)
-- Relevant `anchors.interfaces` and `anchors.configShapes`
-- Likely `requiredPaths` globs
-- Tier-1 only (when the adapter declares `customer_field`): customer
-  name and a starter `canaryPlan` (metrics, thresholds, rollback
-  trigger, window)
+- A clear *Current behavior* paragraph
+- A clear *Desired behavior* paragraph
+- At least one concrete, testable acceptance criterion (Claude Code
+  uses these as the spec)
+- Repro steps (for Bugs)
 
-The session output feeds directly into the Agent Brief template.
+The session output gets edited *back into the issue body* — that's the
+artifact runway reads.
 
 ### Step 5 — apply the outcome
 
@@ -273,8 +252,8 @@ reasoning before the issue moves.
 
 | Outcome | Comment to post | Labels | Status |
 |---|---|---|---|
-| `ready-for-agent` | **Agent Brief** (see [AGENT-BRIEF.md](AGENT-BRIEF.md)) | + category, + `ready-for-agent`, − `needs-info` | `todo` |
-| `ready-for-human` | **Human Brief** — Agent Brief shape + required *Why human, not agent* paragraph | + category, + `ready-for-human`, − `needs-info` | `todo` |
+| Runway-ready | (optional) "Promoting to Todo — runway will pick this up" | + category, − `needs-info` | `todo` |
+| Human-only (HITL) | **Human Brief** — short paragraph explaining *why human, not runway* (production access, judgment, etc.) | + category, + `needs-human`, − `needs-info` | `todo` |
 | `needs-info` | **Triage Notes** — what's established + the *specific* missing facts (template below) | + category, + `needs-info` | `triage` |
 | Won't fix (Bug) | Polite explanation | + `Bug` | `canceled` |
 | Won't fix (Feature/Improvement) | Polite explanation **and** link to the `.out-of-scope/` file | + category | `canceled` |
@@ -298,8 +277,8 @@ performs the calls. Cache resolved IDs within the session.
 
 ## Workflow: quick state override
 
-When the maintainer says "move issue 42 to ready-for-agent", trust them.
-Skip grilling.
+When the maintainer says "move issue 42 to Todo", trust them. Skip
+grilling.
 
 Still confirm before writing:
 
@@ -307,19 +286,16 @@ Still confirm before writing:
 - Status to apply
 - Whether to post a comment, and what kind
 
-For `ready-for-agent` without a grilling session, ask: "Draft a brief
-Agent Brief from existing context, or skip the comment?" Default to
-drafting one — pre-flight will reject a contract derived from a vague
-brief.
-
-For `valesco-platform` issues, refuse `ready-for-agent` and explain
-(§14.3). Offer `ready-for-human`.
+For `Todo` without prior grilling, ask once: "The issue body looks like
+[summary]. Sharp enough for runway, or want to flesh it out first?" If
+the body is genuinely thin, runway will produce a thin PR — say so and
+let the maintainer decide.
 
 ## Needs-info template
 
-When a brief cannot yet be written, name the *specific* facts the
-goal-contract is missing. Vague "please provide more info" is useless;
-the questions must let the maintainer construct an Agent Brief once
+When the body isn't sharp enough yet, name the *specific* facts that
+need to land in it. Vague "please provide more info" is useless; the
+questions must let the maintainer (or reporter) edit the body once
 they're answered.
 
 ```markdown
@@ -332,15 +308,12 @@ they're answered.
 - point 1
 - point 2
 
-**What we need to make this AFK-ready (@<reporter>):**
+**What we need before this can move to Todo (@<reporter>):**
 
 - A specific success criterion, e.g. "When X happens, the user should
   see Y" — what's the testable outcome?
-- Which interface or config shape is involved? (e.g., `OAuthConfig`,
-  `SkillMetadata`)
 - Steps to reproduce on a fresh checkout (for Bugs)
-- Customer name, if this affects a Tier-1 production property *(only
-  when the adapter declares `customer_field`)*
+- The current vs. desired behavior, in one paragraph each
 ```
 
 Capture **everything** resolved during the grilling session in
@@ -369,9 +342,5 @@ When triaging an issue with prior triage activity:
   — the design decision behind the adapter abstraction.
 - [`../diagnose/SKILL.md`](../diagnose/SKILL.md) — downstream Bug
   reproduction skill.
-- [`../draft-contract/SKILL.md`](../draft-contract/SKILL.md) —
-  downstream contract authoring.
-- [`../brief-to-contract/SKILL.md`](../brief-to-contract/SKILL.md) —
-  orchestration spine that calls this skill.
-- `valesco-platform/docs/afk/governance-plan.md` §14.3
-  (control-plane refusal rationale).
+- [`runway`](https://github.com/ValescoAgency/runway) — what picks the
+  issue up once it's in `Todo`.

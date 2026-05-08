@@ -1,6 +1,6 @@
 ---
 name: feedback-loop
-description: 'Construct a deterministic, agent-runnable pass/fail signal for a bug, regression, or feature — fast, sharp, and reproducible without a human in the loop. Use when the user says "build a test harness", "make this reproducible", "set up a verifier for this contract", "what''s the cheapest reproducer for this bug", "the dev loop is too slow", or "we need a deterministic check for this". This is the reference skill the rest of the Valesco engineering chain leans on: `/diagnose` Phase 1 invokes it to find a bug''s cause, `/tdd` invokes it to drive new code red→green, and `/draft-contract` invokes it when authoring the goal-contract''s `verification.commands`. Distinct from `/diagnose` (which *uses* loops to locate causes) and `/tdd` (which *uses* loops to drive incremental implementation) — this skill is about *constructing* the loop itself. Whenever you find yourself debugging by re-reading code or running ad-hoc commands without a deterministic pass/fail, stop and run this.'
+description: 'Construct a deterministic, agent-runnable pass/fail signal for a bug, regression, or feature — fast, sharp, and reproducible without a human in the loop. Use when the user says "build a test harness", "make this reproducible", "what''s the cheapest reproducer for this bug", "the dev loop is too slow", or "we need a deterministic check for this". This is the reference skill the rest of the Valesco engineering chain leans on: `/diagnose` Phase 1 invokes it to find a bug''s cause, `/tdd` invokes it to drive new code red→green. Distinct from `/diagnose` (which *uses* loops to locate causes) and `/tdd` (which *uses* loops to drive incremental implementation) — this skill is about *constructing* the loop itself. Whenever you find yourself debugging by re-reading code or running ad-hoc commands without a deterministic pass/fail, stop and run this.'
 ---
 
 # /feedback-loop
@@ -10,26 +10,22 @@ the behavior under question. Pick from a catalog of ten patterns, harden
 the loop against flakes, and hand it off to whatever skill called this one.
 
 This skill is advisory. It writes test files, scripts, harnesses, and
-fixtures — never `.goal-contract*.yml`, never `.afk/attestations/`, never
-labels. The loop you build here is the *input* to those authority-bearing
-artefacts, not the artefact itself.
+fixtures — never tracker labels.
 
 ## Why a deterministic loop is load-bearing
 
-Three things in the Valesco chain depend on the loop existing and behaving
+Two things in the Valesco chain depend on the loop existing and behaving
 predictably:
 
-1. **AFK pre-flight.** The goal-contract's `verification.commands` are
-   executed unattended by the AFK runner. A flaky verifier produces flaky
-   AFK runs — bad code merges because the flake masked a real failure, or
-   good code rolls back because the flake fired on a clean diff. Per
-   governance plan §G10, Tier-1 contracts require deterministic verifiers
-   or disqualification.
-2. **`/diagnose` Phase 1.** Without a loop, hypothesis-testing degrades to
+1. **`/diagnose` Phase 1.** Without a loop, hypothesis-testing degrades to
    hand-waving. Phase 1 is the entire skill — the rest is mechanical once
    the signal exists.
-3. **`/tdd` red→green.** A test that takes 30 seconds to fail breaks the
+2. **`/tdd` red→green.** A test that takes 30 seconds to fail breaks the
    tracer-bullet rhythm; the agent stops listening to its own feedback.
+
+The loop also tends to graduate into a regression test that lives in the
+repo permanently, so the next person hitting the same bug — including
+Claude Code running inside runway — has a deterministic check available.
 
 If you don't have a loop, you don't have engineering — you have
 storytelling. Build the loop.
@@ -40,8 +36,6 @@ storytelling. Build the loop.
   need an automatable signal.
 - Inside `/tdd`, when picking the seam for the first failing test in a new
   feature slice.
-- Inside `/draft-contract`, when the contract needs a `verification.commands`
-  entry and the source tracker issue doesn't yet specify one.
 - Standalone, when the user says "the dev loop is too slow" — the
   iteration ladder applies even when no specific bug is on the table.
 
@@ -54,22 +48,6 @@ storytelling. Build the loop.
   `/triage` to determine whether you have legitimate access to a
   reproducer; this skill cannot manufacture one out of nothing.
 
-## Pre-flight — read AFK context
-
-Read `.afk/config.yml` at the working repo root to set the determinism bar:
-
-| Field | Determinism requirement |
-|---|---|
-| `afkEligible: true` + `projectTier: 1` | **Disqualified-or-deterministic.** No documented flakes accepted in `verification.commands`. Every retry attempt is a failure to root-cause. Spend the time. |
-| `afkEligible: true` + `projectTier: 2` | Documented flakes tolerated if the flake rate is < 1% and the failure mode is well-understood. Add a `# flake-budget: <reason>` comment in the verifier. |
-| `afkEligible: true` + `projectTier: 3` | Best effort. Some flakiness OK if the alternative is no loop at all. |
-| `afkEligible: false` | The loop feeds a human PR — use whatever level of determinism the human reviewer is willing to defend. |
-| missing | Surface to the maintainer before continuing. |
-
-This bar shapes which patterns are eligible (e.g., HITL bash is never a
-Tier-1 verifier — humans aren't part of the AFK runner) and how aggressively
-to climb the iteration ladder.
-
 ## Three properties of a good loop
 
 Every loop, regardless of pattern, is judged on three axes. A 30-second
@@ -81,8 +59,8 @@ loop is a debugging superpower.
 - **Target:** under 5 seconds wall-clock per iteration.
 - **Superpower threshold:** under 2 seconds. At this speed the agent (or
   human) iterates without losing context between cycles.
-- **Disqualifying:** over 30 seconds per iteration on Tier 1 — the AFK
-  runner's retry budget burns too quickly.
+- **Disqualifying:** over 30 seconds per iteration — the iteration rhythm
+  collapses.
 
 How to get fast: cache setup steps (don't re-bootstrap the DB on every
 iteration), narrow the scope (run *one* test, not the whole file), skip
@@ -114,7 +92,7 @@ non-determinism to neutralize:
   inside a container with no egress.
 
 If you cannot neutralize one of the four, document which and why in a
-comment alongside the loop. AFK pre-flight will read it on Tier 1.
+comment alongside the loop.
 
 ## Pattern catalog
 
@@ -325,8 +303,9 @@ deployments, two implementations — and diff outputs.
 ### 10. HITL bash
 
 A bash script that prompts a human for the action, captures the result,
-and feeds it back to the agent. Last resort — humans are not part of the
-AFK runner, so this disqualifies the loop as a Tier-1 verifier.
+and feeds it back to the agent. Last resort — humans aren't part of an
+autonomous run, so this disqualifies the loop as a regression test that
+runway / CI can re-run later.
 
 - **When it fits:** the bug is in a closed system (vendor app, hardware,
   external service) where no programmatic loop exists; the human can give
@@ -367,8 +346,8 @@ Walk this tree top-to-bottom. Stop at the first "yes."
 9. **Are there two configurations or versions you can compare?** → Pattern 9
    (differential).
 10. **Final fallback** — and only after honestly trying 1–9: Pattern 10
-    (HITL bash). Mark the loop as Tier-1-disqualified in any
-    `verification.commands` reference.
+    (HITL bash). The loop will not be replayable by an autonomous run, so
+    the issue probably needs `needs-human` rather than `Todo`.
 
 If you fall off the bottom of the tree without a fit, the bug isn't
 loopable yet — return to `/triage` and request reproducer access,
@@ -377,7 +356,7 @@ trace capture, or production instrumentation as `needs-info`.
 ## Iteration ladder
 
 Apply across every pattern. Climb until the loop is fast, sharp, and
-deterministic enough to defend at the relevant tier.
+deterministic enough to defend.
 
 | Step | Cheap | Expensive |
 |---|---|---|
@@ -402,35 +381,20 @@ graduates into the project's permanent infrastructure:
 |---|---|
 | [`/diagnose`](../diagnose/SKILL.md) Phase 1 | The active feedback loop for hypothesis testing. The Phase 5 regression test typically condenses it into a permanent test. |
 | [`/tdd`](https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md) | The first failing test in the red→green cycle. Each subsequent slice extends or copies it. |
-| [`/draft-contract`](../draft-contract/SKILL.md) | A `verification.commands` entry — phrased as a single shell invocation that exits 0 on pass, non-zero on fail. The AFK runner will execute it unattended. |
-| [`/brief-to-contract`](../brief-to-contract/SKILL.md) | The bridge that lifts the loop from "ad-hoc reproducer" to "named verifier in the goal-contract." |
-
-When invoked from `/draft-contract`, output the loop in a form ready to
-paste into `verification.commands`:
-
-```yaml
-verification:
-  commands:
-    - "pnpm vitest run src/cart/total.test.ts -t 'zero-priced item'"
-    # 2.1s wall-clock, deterministic (clock pinned, RNG seeded, MSW for /api/prices)
-```
-
-The trailing comment documents the three-properties evidence so a future
-reader (or auditor) knows what was demonstrated, not just claimed.
+| Issue body for runway pickup | Once a loop graduates into a permanent test, reference it by path in the issue body so Claude Code (running inside runway) sees both the spec and a deterministic check. |
 
 ## Self-validation before declaring done
 
 - [ ] The loop exits 0 on pass, non-zero on fail. No "look for the right
       string in the output."
-- [ ] Wall-clock time measured and recorded. (Ideally < 5s, < 2s on Tier
-      1 verifiers.)
+- [ ] Wall-clock time measured and recorded. (Ideally < 5s, < 2s if you
+      want it to be a daily-driver loop.)
 - [ ] The loop has been run **three times in a row** and produced the same
       result each time.
 - [ ] Every source of non-determinism (time / randomness / filesystem /
       network) is either neutralized or explicitly documented in a comment.
-- [ ] On Tier 1, no `# flake-budget` comment is present.
-- [ ] No human input required mid-loop (or, if HITL, the disqualification
-      is noted in the hand-off).
+- [ ] No human input required mid-loop (or, if HITL, the limitation is
+      noted in the hand-off).
 
 If any check fails, fix the loop before returning. A loop that "mostly
 works" is the same as no loop — it pollutes downstream skills with noise.
@@ -442,13 +406,13 @@ works" is the same as no loop — it pollutes downstream skills with noise.
   before continuing — picking a framework is a project-level decision,
   not a per-loop one.
 - **No performance budget setting.** "Loop should be fast" is the
-  discipline here. "API should respond in < 100ms" is a goal-contract
-  field — see [`/draft-contract`](../draft-contract/SKILL.md).
+  discipline here. "API should respond in < 100ms" is acceptance-criteria
+  territory in the issue body, not a property of this skill.
 - **No fix authoring.** This skill ends when the loop reliably observes
   the bug. The fix is `/diagnose` Phase 5 or `/tdd` green.
 - **No production instrumentation.** Loops live in test code or
   `scripts/debug/`, never in `src/`. Production probes need explicit user
-  approval per the protected-paths convention.
+  approval.
 - **No CI integration.** Hooking the loop into CI is a project-level
   decision after the loop is proven locally.
 
@@ -456,16 +420,8 @@ works" is the same as no loop — it pollutes downstream skills with noise.
 
 - [`../diagnose/SKILL.md`](../diagnose/SKILL.md) — the primary caller;
   Phase 1 is "build a loop using this skill."
-- [`../draft-contract/SKILL.md`](../draft-contract/SKILL.md) — consumer
-  for `verification.commands`.
-- [`../brief-to-contract/SKILL.md`](../brief-to-contract/SKILL.md) —
-  orchestrates this skill into the contract pipeline.
 - [Matt Pocock's `/tdd`](https://github.com/mattpocock/skills/blob/main/skills/engineering/tdd/SKILL.md)
   — the red→green caller; this skill is the "build the red" half.
 - [Matt Pocock's `/diagnose`](https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnose/SKILL.md)
   — Phase 1 of his version is the doctrinal source for the ten-pattern
   catalog; this skill is the expanded reference.
-- `valesco-platform/docs/afk/governance-plan.md` §G10 — Tier-1 verifier
-  determinism rule.
-- `valesco-platform/afk/schemas/goal-contract.v2.json` — the
-  `verification.commands` field shape.

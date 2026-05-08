@@ -1,7 +1,7 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "valesco",
-  "description": "Valesco-authored Claude Code skills for harness engineering and agent orchestration around the AFK autonomous-coding governance pipeline.",
+  "description": "Valesco-authored Claude Code skills for harness engineering and tracker triage.",
   "owner": {
     "name": "Valesco Agency",
     "email": "jason@valescoagency.com",
@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "flightplan",
-      "description": "Skills bundle: /triage, /diagnose, /feedback-loop, /draft-contract, /attest, /brief-to-contract, /run-attested, plus tracker adapters (Linear, GitHub). Drives an issue from triage through goal-contract attestation, vendor-agnostic via the tracker adapter contract.",
+      "description": "Skills bundle: /triage, /diagnose, /feedback-loop, plus tracker adapters (Linear, GitHub). Drives a tracker issue from raw inbox into a state where Valesco's autonomous CLI (runway) can pick it up. Vendor-agnostic via the tracker adapter contract.",
       "category": "development",
       "source": "./",
       "homepage": "https://github.com/ValescoAgency/flightplan"

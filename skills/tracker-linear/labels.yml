@@ -18,8 +18,7 @@ categories:
 # State labels — at most one per issue.
 state_labels:
   needs-info: needs-info
-  ready-for-agent: ready-for-agent
-  ready-for-human: ready-for-human
+  needs-human: needs-human
   wontfix: wontfix
   needs-triage: needs-triage  # rarely used in Linear; status `Triage` covers most cases
 

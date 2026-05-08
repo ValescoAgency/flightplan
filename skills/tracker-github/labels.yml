@@ -51,15 +51,11 @@ state_labels:
   needs-info:
     name: needs-info
     color: "fbca04"
-    description: "Issue lacks information needed to proceed; awaiting reporter input"
-  ready-for-agent:
-    name: ready-for-agent
-    color: "1f883d"
-    description: "Agent Brief in place; AFK pre-flight should accept this issue"
-  ready-for-human:
-    name: ready-for-human
+    description: "Issue body lacks information needed to proceed; awaiting reporter input"
+  needs-human:
+    name: needs-human
     color: "fb6f1c"
-    description: "Out of AFK scope; a human should work this manually"
+    description: "A human should pick this up rather than the autonomous CLI"
   wontfix:
     name: wontfix
     color: "ffffff"
