@@ -36,7 +36,7 @@ Loaded automatically by consumer skills based on `.afk/config.yml`'s
 | Adapter | Status | Notes |
 |---|---|---|
 | [`tracker-linear`](../skills/tracker-linear/SKILL.md) | Shipped (default) | Full capability set. |
-| [`tracker-github`](../skills/tracker-github/SKILL.md) | Shipped (Phase A2) | Triage end-to-end works; full chain blocks on Phase B schema migration. |
+| [`tracker-github`](../skills/tracker-github/SKILL.md) | Shipped (Phase A2) | Full-capability end-to-end post-VA-331 (Phase B schema migration shipped 2026-05-07). |
 | `tracker-jira`, `tracker-local-md` | Deferred | — |
 
 ---

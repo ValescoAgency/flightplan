@@ -146,7 +146,7 @@ only canonical names; the adapter translates to vendor-native form.
 | Adapter | Status | Notes |
 |---|---|---|
 | [`tracker-linear`](../skills/tracker-linear/SKILL.md) | Default, shipped | Full capability set — `customer_field`, `team_namespace`, reliable active-work detection. |
-| [`tracker-github`](../skills/tracker-github/SKILL.md) | Shipped (Phase A2) | Triage-end-to-end works; full chain through `/draft-contract` blocked on Phase B schema migration in `valesco-platform`. |
+| [`tracker-github`](../skills/tracker-github/SKILL.md) | Shipped (Phase A2) | Full-capability end-to-end through `/draft-contract` and `/attest` post-VA-331 (Phase B schema migration shipped 2026-05-07). |
 | `tracker-jira`, `tracker-local-md` | Deferred | — |
 
 The contract that defines the adapter API is
