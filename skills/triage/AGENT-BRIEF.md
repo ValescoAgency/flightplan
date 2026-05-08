@@ -6,7 +6,7 @@ Pre-flight will reject a contract whose source brief is vague. So this format is
 
 ## How the brief maps to the goal-contract
 
-(Schema reference: `valesco-platform/afk/schemas/goal-contract.v1.json`. Fields below quote the schema.)
+(Schema reference: `valesco-platform/afk/schemas/goal-contract.v2.json`. Fields below quote the schema.)
 
 | Brief section            | Goal-contract field                          | Pre-flight rule                                       |
 | ------------------------ | -------------------------------------------- | ----------------------------------------------------- |

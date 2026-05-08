@@ -55,9 +55,11 @@ If absent:
 
 ### 2. Attestation record exists
 
-Resolve the issue ID from `metadata.linearIssueId` (or
-`metadata.trackerIssueId` post-Phase B). Look for
-`.afk/attestations/<id>.json`. If absent:
+Resolve the issue ID from `metadata.trackerIssueId` (renamed from
+`metadata.linearIssueId` at schemaVersion 2.0.0; pre-2.0.0 contracts
+still in flight should also be checked under the legacy field name for
+backward compatibility). Look for `.afk/attestations/<id>.json`. If
+absent:
 
 > Refusing to run. No attestation record at
 > `.afk/attestations/<id>.json`. Run `/attest` first; the runner refuses
@@ -150,6 +152,20 @@ refused) and surface key fields:
 - `reasons` — list as bullets
 - `phase`
 - `contract.tier`
+- `contract.bootstrap` — when `true`, prefix the report with
+  `bootstrap-mode contract` so the human reviewing the branch knows the
+  glob-resolution check was inverted, the canary plan was relaxed, and
+  the friction-delay matrix used the bootstrap row (per VA-327 / VA-329
+  / governance §G14).
+- `preflight.bootstrap_allowlist_hits[]` — when present and non-empty,
+  list each hit. These are pre-existing paths the bootstrap contract is
+  legitimately allowed to touch via
+  `afk/protected-paths/bootstrap-allowlist.yml`. Surface for visibility;
+  do not flag them as drift.
+- `signals.path_facts.bootstrapAllowlistHits[]` — same list as observed
+  through the path-facts signal lens. If it disagrees with
+  `preflight.bootstrap_allowlist_hits[]`, surface the discrepancy
+  prominently — that's a bug in pre-flight or in the audit emitter.
 
 Plus from the runner's stdout JSON:
 

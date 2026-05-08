@@ -71,7 +71,7 @@ the entry point. Detection rules in detail:
 
 | Existing artefact | Entry stage | Skill announces |
 |---|---|---|
-| `.afk/attestations/<linearIssueId>.json` exists, sha matches current `.goal-contract.yml` | Stage 8 | "Already attested. Printing hand-off." |
+| `.afk/attestations/<trackerIssueId>.json` exists, sha matches current `.goal-contract.yml` | Stage 8 | "Already attested. Printing hand-off." |
 | `.goal-contract.yml` exists, no `<PLANNER_SUGGESTED:>` tokens, no attestation record (or sha drift) | Stage 7 | "Contract authored; entering attestation." |
 | `.goal-contract.yml` exists, but `<PLANNER_SUGGESTED:>` tokens remain | Refuse to advance | "Contract has unreplaced tokens. Replace them, then I'll run /attest." |
 | `.goal-contract.draft.yml` exists, no `.goal-contract.yml` | Stage 5 | "Draft exists; awaiting token replacement + rename." |
@@ -238,7 +238,7 @@ proceed.
 
 Invoke [`/attest`](../attest/SKILL.md). The attestation skill walks the
 human through the tier-scaled checklist and writes
-`.afk/attestations/<linearIssueId>.json`.
+`.afk/attestations/<trackerIssueId>.json`.
 
 This skill **blocks** until the attestation record exists with
 `attestedContentSha` matching the current YAML. If `/attest` is aborted
@@ -247,7 +247,7 @@ a fresh attestation.
 
 After `/attest` returns successfully:
 
-- Verify `.afk/attestations/<linearIssueId>.json` parses, validates, and
+- Verify `.afk/attestations/<trackerIssueId>.json` parses, validates, and
   matches the current YAML's sha.
 - If sha drift is detected later (the user edited the contract after
   attestation), refuse Stage 8 and tell them to re-attest.
@@ -359,7 +359,7 @@ When the skill reaches Stage 8 hand-off, check:
 
 - [ ] `.goal-contract.yml` exists at repo root, parses as YAML, no
       `<PLANNER_SUGGESTED:>` tokens.
-- [ ] `.afk/attestations/<linearIssueId>.json` exists, parses, and
+- [ ] `.afk/attestations/<trackerIssueId>.json` exists, parses, and
       validates against the v1 schema.
 - [ ] `attestedContentSha` in the record == `sha256:` + sha256 of current
       `.goal-contract.yml` bytes.
