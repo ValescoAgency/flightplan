@@ -47,6 +47,7 @@ the adapter system below.
 | [`/triage`](skills/triage/SKILL.md) | Funnel issues into `Todo` with sharp acceptance criteria so runway will pick them up. HITL-aware. |
 | [`/diagnose`](skills/diagnose/SKILL.md) | Six-phase debugging discipline; Phase 1 builds a deterministic feedback loop. |
 | [`/feedback-loop`](skills/feedback-loop/SKILL.md) | The 10-pattern catalog for constructing deterministic agent-runnable signals. |
+| [`/runway-init`](skills/runway-init/SKILL.md) | Onboard a target repo to runway in one pass — `npx sandcastle init` plus Valesco's varlock + 1Password customizations. Embedded scripts; advisory (commits but never pushes). |
 
 ## Tracker adapters
 
