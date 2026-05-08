@@ -5,10 +5,9 @@
 # ValescoAgency/flightplan
 
 Claude Code skills authored by or curated for [Valesco Agency](https://valescoagency.com)
-to develop software via **harness engineering and agent orchestration**.
-
-Primary consumer: the AFK (autonomous) coding governance pipeline at
-[`ValescoAgency/valesco-platform`](https://github.com/ValescoAgency/valesco-platform).
+to drive tracker issues from idea to a clean handoff state for
+[runway](https://github.com/ValescoAgency/runway), Valesco's autonomous
+coding CLI.
 
 ## Install
 
@@ -25,39 +24,29 @@ claude plugin install flightplan@valesco
 ```
 
 After install, skills are invocable as `flightplan:<skill-name>` (e.g.
-`flightplan:triage`, `flightplan:draft-contract`, `flightplan:brief-to-contract`).
+`flightplan:triage`, `flightplan:diagnose`).
 
 ## Contents
 
 - [`CONTEXT.md`](CONTEXT.md) — ubiquitous-language glossary for
-  flightplan + AFK pipeline. Read on session start.
-- [`docs/workflow.md`](docs/workflow.md) — end-to-end harness +
-  orchestration map, repo conventions (`CONTEXT.md`, `docs/adr/`,
-  `.afk/config.yml`), HITL fork, skills-vs-pipeline boundary.
+  flightplan + runway. Read on session start.
+- [`docs/workflow.md`](docs/workflow.md) — end-to-end map from idea to
+  PR, repo conventions, HITL fork.
 - [`docs/adr/`](docs/adr/) — architectural decision records.
-- [`docs/refactor-plan.md`](docs/refactor-plan.md) — phased PR roadmap
-  for the tracker adapter rollout.
-- [`docs/starter-set.md`](docs/starter-set.md) — adopted skills (Valesco
-  + Matt Pocock + Addy Osmani), with rationale.
-- [`docs/gaps.md`](docs/gaps.md) — open gaps, pipeline cross-references,
-  closed gaps with ship dates.
 - `skills/<skill-name>/SKILL.md` — Valesco-authored skills, one
   directory per skill (Claude Code plugin convention).
 
 ## Consumer skills
 
-User-invoked skills that drive issues through the AFK chain. Vendor-agnostic
-— they read the active tracker via the adapter system below.
+User-invoked skills that drive issues toward the runway pickup state
+(tracker `Todo`). Vendor-agnostic — they read the active tracker via
+the adapter system below.
 
 | Skill | Purpose |
 |---|---|
-| [`/triage`](skills/triage/SKILL.md) | Funnel issues toward `ready-for-agent` with an Agent Brief comment. AFK-eligibility-aware. *(Renamed from `/linear-triage` in 0.3.0.)* |
-| [`/diagnose`](skills/diagnose/SKILL.md) | Six-phase debugging discipline; Phase 1 builds the verifier the goal-contract will use. |
+| [`/triage`](skills/triage/SKILL.md) | Funnel issues into `Todo` with sharp acceptance criteria so runway will pick them up. HITL-aware. |
+| [`/diagnose`](skills/diagnose/SKILL.md) | Six-phase debugging discipline; Phase 1 builds a deterministic feedback loop. |
 | [`/feedback-loop`](skills/feedback-loop/SKILL.md) | The 10-pattern catalog for constructing deterministic agent-runnable signals. |
-| [`/draft-contract`](skills/draft-contract/SKILL.md) | Lift a tracker issue into `.goal-contract.draft.yml` with `<PLANNER_SUGGESTED:>` tokens (§G8 gate). |
-| [`/attest`](skills/attest/SKILL.md) | Tier-scaled attestation checklist; writes `.afk/attestations/<id>.json`. |
-| [`/brief-to-contract`](skills/brief-to-contract/SKILL.md) | Orchestration spine — drives an issue from triage through to attested contract with resume detection + HITL exits. |
-| [`/run-attested`](skills/run-attested/SKILL.md) | **v1 dogfood only** — manually invokes `@valesco/afk-runner` against an attested contract. Production runs go through the central label handler in v2 (see [VA-291](https://linear.app/valescoagency/issue/VA-291)). |
 
 ## Tracker adapters
 
@@ -69,52 +58,24 @@ active adapter is selected via `tracker:` in `.afk/config.yml` (default
 | Adapter | Status | Capabilities |
 |---|---|---|
 | [`tracker-linear`](skills/tracker-linear/SKILL.md) | Shipped (default) | Full — customer field, project/cycle membership, team namespace, reliable active-work detection |
-| [`tracker-github`](skills/tracker-github/SKILL.md) | Shipped (Phase A2) | Reduced — no customer field, best-effort active-work detection. Triage works end-to-end; full chain through `/draft-contract` waits on Phase B schema migration in `valesco-platform`. |
+| [`tracker-github`](skills/tracker-github/SKILL.md) | Shipped | Reduced — no customer field, best-effort active-work detection |
 | `tracker-jira`, `tracker-local-md` | Deferred | — |
-
-This repo is its own dogfood for the GitHub adapter — see
-[`.afk/config.yml`](.afk/config.yml). `afkEligible: true` (advisory
-skills, not authority — see
-[`docs/workflow.md`](docs/workflow.md#when-afkeligible-false-is-the-right-answer)
-for why flightplan is not a §14.3 control plane); `projectTier: 2`;
-`tracker: github`. Walking flightplan issues through the full AFK
-chain against the `tracker-github` adapter is the validation milestone
-for Phase A2 — modulo the Phase B schema regex blocker, which the walk
-will surface concretely at `/draft-contract`.
 
 These compose with Matt Pocock's
 [engineering skills](https://github.com/mattpocock/skills/tree/main/skills/engineering)
 (`/grill-with-docs`, `/to-prd`, `/to-issues`,
 `/improve-codebase-architecture`, `/zoom-out`, `/tdd`) per the workflow
 in [`docs/workflow.md`](docs/workflow.md). Matt's `/triage` is **not**
-adopted — flightplan's `/triage` is a strict superset (same canonical
-state machine, plus AFK eligibility, tier logic, and §14.3 refusal).
-
-## Skills-vs-pipeline rule
-
-Load-bearing constraint on what belongs here:
-
-- **Pipeline code** (lives in `valesco-platform/afk/`): capabilities
-  touching hash-bound authority, audit records, tier gates, or requiring
-  deterministic + replayable behavior. Validator runs, pre-flight checks,
-  authority binding, label handler.
-- **Skills** (live here): capabilities that are advisory, exploratory,
-  or user-invoked. PRD drafting, domain modeling, triage, diagnosis,
-  attestation walkthroughs, contract-drafting, orchestration spine.
-
-If a proposed skill would violate the boundary, it becomes a pipeline
-ticket, not a skill. See [`docs/gaps.md`](docs/gaps.md) for the
-cross-reference list of pipeline items registered there only so skill
-work doesn't accidentally pick them up.
+adopted — flightplan's `/triage` adds runway-prep discipline (sharp
+acceptance criteria, HITL routing) on top of the same canonical state
+machine.
 
 ## Related
 
-- [`valesco-platform`](https://github.com/ValescoAgency/valesco-platform)
-  — AFK governance + platform code
-- [`docs/sdlc/workflow.md`](https://github.com/ValescoAgency/valesco-platform/blob/main/docs/sdlc/workflow.md)
-  — Valesco SDLC including §8 AFK governance
-- [`docs/afk/governance-plan.md`](https://github.com/ValescoAgency/valesco-platform/blob/main/docs/afk/governance-plan.md)
-  — boundary constraints any adopted skill must respect
+- [`runway`](https://github.com/ValescoAgency/runway) — autonomous CLI;
+  reads issues from the tracker, runs Claude Code in
+  [`@ai-hero/sandcastle`](https://www.npmjs.com/package/@ai-hero/sandcastle),
+  runs an adversarial sub-agent review, opens a PR.
 - [Matt Pocock's skills](https://github.com/mattpocock/skills) —
   upstream for `/grill-with-docs`, `/to-prd`, `/to-issues`,
-  `/improve-codebase-architecture`, `/zoom-out`, `/tdd`
+  `/improve-codebase-architecture`, `/zoom-out`, `/tdd`.

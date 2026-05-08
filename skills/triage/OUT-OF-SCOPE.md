@@ -66,7 +66,7 @@ The reason should be substantive — not "we don't want this" but **why**. Good 
 - Project scope or philosophy ("This project focuses on X; theming is a downstream concern")
 - Technical constraints ("Supporting this would require Y, which conflicts with our Z architecture")
 - Strategic decisions ("We chose A instead of B because…")
-- Governance ("`valesco-platform` is `afkEligible: false` and this would require AFK to modify its own policies — §14.3")
+- Governance ("This change would require modifying authority code that's intentionally off-limits to autonomous runs")
 
 The reason should be **durable**. Avoid temporary circumstances ("we're too busy right now") — those aren't real rejections, they're deferrals. Deferrals belong in `Backlog` status, not `.out-of-scope/`.
 

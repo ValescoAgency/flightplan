@@ -1,58 +1,49 @@
 ---
 name: diagnose
-description: Disciplined diagnosis loop for hard bugs and performance regressions inside the Valesco AFK pipeline. Reproduce → hypothesise → instrument → fix → regression-test, with Phase 1 (build a feedback loop) load-bearing. Use when the user says "diagnose this", "debug this", "reproduce this bug", "this is throwing/failing/broken in prod", "why is this slow", or describes a performance regression. Distinct from `/triage` (which decides whether a bug has enough information to be tractable at all) and `/draft-contract` (which lifts an already-diagnosed issue into a goal-contract). Run this AFTER triage has confirmed the issue is real, BEFORE drafting a contract — the feedback loop you build here is a candidate verifier for the contract's `verification.commands`, and the regression test you write seeds `intent.successCriteria`.
+description: Disciplined diagnosis loop for hard bugs and performance regressions. Reproduce → hypothesise → instrument → fix → regression-test, with Phase 1 (build a feedback loop) load-bearing. Use when the user says "diagnose this", "debug this", "reproduce this bug", "this is throwing/failing/broken in prod", "why is this slow", or describes a performance regression. Distinct from `/triage` (which decides whether a bug has enough information to be tractable at all). Run this AFTER triage has confirmed the issue is real, BEFORE letting the issue advance to `Todo` for runway — the regression test you write seeds the issue's acceptance criteria and the loop you build proves the fix actually closes the bug.
 ---
 
 # /diagnose
 
-A discipline for hard bugs. Six phases; **Phase 1 is the skill** — everything
-else is mechanical once you have a deterministic, agent-runnable pass/fail
-signal for the bug. Skip phases only when you can articulate why.
+A discipline for hard bugs. Six phases; **Phase 1 is the skill** —
+everything else is mechanical once you have a deterministic, agent-runnable
+pass/fail signal for the bug. Skip phases only when you can articulate why.
 
-This skill is advisory. It never mutates AFK authority records (no contract
-edits, no attestation writes, no label changes). Its outputs are intended to
-feed the next skill in the chain — see [§ Outputs](#outputs-that-flow-downstream).
+This skill is advisory. It writes test files, scripts, harnesses, and
+fixtures — never tracker labels or status changes. Its outputs feed the
+next skill in the chain — see [§ Outputs](#outputs-that-flow-downstream).
 
 ## When to run
 
-After [`/triage`](../triage/SKILL.md) has classified the issue
-as a `Bug` with enough detail to attempt reproduction, but **before**
-[`/draft-contract`](../draft-contract/SKILL.md) lifts it into
-`.goal-contract.draft.yml`. A contract drafted from an undiagnosed bug almost
-always has weak `successCriteria` and no real verifier — pre-flight will
-accept it, and the AFK run will produce code that "passes" without proving
-anything.
+After [`/triage`](../triage/SKILL.md) has classified the issue as a `Bug`
+with enough detail to attempt reproduction, but **before** the issue
+advances to `Todo` for runway. An issue that lands in runway without a
+concrete reproducer almost always produces a "fix" that passes review
+without proving anything — the regression test you build here pins the
+behavior down.
 
-Also valid: standalone debugging during HITL work, where the bug never makes
-it to a contract. The phases still apply.
+Also valid: standalone debugging during HITL work, where the bug never
+makes it to runway. The phases still apply.
 
 ## When NOT to run
 
 - The reporter's body lacks reproduction steps and the code path is unclear
-  → run [`/triage`](../triage/SKILL.md) and post `needs-info`
-  with specific questions instead.
+  → run [`/triage`](../triage/SKILL.md) and post `needs-info` with
+  specific questions instead.
 - The bug is already reproducing in CI — Phase 1 is mostly free; jump to
   Phase 3.
 - The "bug" is actually a missing feature — this is `Feature`/`Improvement`
   work, not diagnosis. Run [`/grill-with-docs`](https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md)
   → `/to-prd` → `/to-issues` instead.
 
-## Pre-flight — read AFK context
+## Pre-flight — read project context
 
-Before Phase 1, read `.afk/config.yml` at the working repo root:
-
-| Field | Effect on diagnosis |
-|---|---|
-| `afkEligible: false` | The repo is a control plane (e.g. `valesco-platform`). Diagnose still runs, but the loop you build will feed a **human** PR, not an AFK contract. Skip the contract-handoff steps in [§ Outputs](#outputs-that-flow-downstream). |
-| `afkEligible: true` + `projectTier: 1` | Production / client-critical. The feedback loop you build is a **load-bearing** verifier. Be aggressive about determinism — flaky verifiers on Tier 1 are unacceptable per governance plan §G10. |
-| `afkEligible: true` + `projectTier: 2` or `3` | Standard discipline applies. |
-| missing | Surface to the maintainer before continuing. |
-
-Also: read [`CONTEXT.md`](../../docs/workflow.md#contextmd--ubiquitous-language)
+Before Phase 1, read [`CONTEXT.md`](../../docs/workflow.md#contextmd--ubiquitous-language)
 for the project's domain glossary, and skim [`docs/adr/`](../../docs/workflow.md#adrs)
-for any architectural decision in the area you're touching. Use the glossary
-vocabulary in everything you write — test names, log prefixes, hypothesis
-text — so downstream skills (`/draft-contract`, `/to-issues`) inherit
+for any architectural decision in the area you're touching. Use the
+glossary vocabulary in everything you write — test names, log prefixes,
+hypothesis text — so downstream readers (the reporter, the human PR
+reviewer, the Claude Code instance running inside runway) inherit
 consistent language.
 
 ## Phase 1 — Build a feedback loop
@@ -102,8 +93,7 @@ The loop is a product. Once you have *a* loop, ask:
   network.
 
 A 30-second flaky loop is barely better than no loop. A 2-second
-deterministic loop is a debugging superpower — and on Tier 1, anything less
-disqualifies it as a verifier.
+deterministic loop is a debugging superpower.
 
 ### Non-deterministic bugs
 
@@ -126,8 +116,7 @@ Stop. Do **not** proceed to hypothesise. Output:
 > as the specific blockers.
 
 This is the right answer. Hypothesising without a loop produces plausible
-fixes that don't prove anything — exactly what AFK pre-flight is supposed
-to prevent. Take the slower path.
+fixes that don't prove anything. Take the slower path.
 
 ## Phase 2 — Reproduce
 
@@ -158,7 +147,7 @@ sharpen it.
 **Show the ranked list to the user before testing.** They often have domain
 knowledge that re-ranks instantly ("we just deployed a change to #3"), or
 know hypotheses they've already ruled out. Cheap checkpoint, big time saver.
-Don't block on it — proceed with your ranking if the user is AFK.
+Don't block on it — proceed with your ranking if the user is away.
 
 Use the [`CONTEXT.md`](../../docs/workflow.md#contextmd--ubiquitous-language)
 glossary in hypothesis names so the user reads them in the project's
@@ -233,26 +222,29 @@ result of a real trade-off.
 
 ## Outputs that flow downstream
 
-The whole point of doing this before contract drafting is that the artefacts
-have downstream consumers. After Phase 6, hand the user a structured summary
-they can paste into the tracker comment or feed to the next skill.
+The whole point of doing this before letting an issue go to runway is that
+the artefacts have downstream consumers. After Phase 6, hand the user a
+structured summary they can paste into the tracker comment or edit into the
+issue body itself.
 
 | Artefact from this run | Where it goes next |
 |---|---|
-| The Phase 1 feedback loop (script / test / harness) | Becomes a candidate `verification.commands` entry in the goal-contract — the AFK run will execute it and pre-flight requires it to be deterministic. Reference it explicitly when invoking `/draft-contract`. |
-| The Phase 5 regression test | Seeds an `intent.successCriteria` bullet — phrase it as "When `<scenario>`, the system produces `<observation>`" so it round-trips through the schema's ≥ 5-char testable rule. |
+| The Phase 5 regression test | Becomes one of the issue body's testable acceptance criteria. Phrase it as "When `<scenario>`, the system produces `<observation>`" so the spec round-trips. |
+| The Phase 1 feedback loop (script / test / harness) | Stays in the repo (or `scripts/debug/`) and serves as a deterministic check Claude Code can run while implementing the fix. Reference it in the issue body so runway picks it up alongside the spec. |
 | The hypothesis that turned out correct | Goes in the tracker comment / PR description as the post-mortem one-liner. |
-| Architectural finding (no good seam, etc.) | Open a separate tracker issue tagged `Improvement` and route through `/to-issues` → `/triage`. Do **not** bundle architectural work into the bug-fix contract. |
+| Architectural finding (no good seam, etc.) | Open a separate tracker issue tagged `Improvement` and route through `/to-issues` → `/triage`. Do **not** bundle architectural work into the bug-fix issue. |
 | New domain term encountered | Update [`CONTEXT.md`](../../docs/workflow.md#contextmd--ubiquitous-language) right there — same discipline as `/grill-with-docs`. Lazy-create the file if it doesn't exist. |
 
-If `afkEligible: false`, the first two rows do not apply — feed straight to
-a human PR instead.
+After this skill finishes, the next step is [`/triage`](../triage/SKILL.md)
+to advance the issue to `Todo` (or `needs-human` if the diagnosis surfaced
+something that runway shouldn't handle).
 
 ## AI disclaimer
 
-when this skill posts a comment to the active tracker (e.g. summarising the diagnosis
-for a Bug issue before handing back to triage), the comment **must** start
-with this disclaimer on its own line, before any other content:
+When this skill posts a comment to the active tracker (e.g. summarising the
+diagnosis for a Bug issue before handing back to triage), the comment
+**must** start with this disclaimer on its own line, before any other
+content:
 
 ```
 > *This was generated by AI during diagnosis.*
@@ -264,17 +256,12 @@ their own provenance via git history.
 
 ## Non-goals
 
-- **No contract authoring.** Output feeds [`/draft-contract`](../draft-contract/SKILL.md);
-  this skill never writes `.goal-contract*.yml`.
-- **No attestation.** Diagnosis is upstream of attestation — see
-  [`/attest`](../attest/SKILL.md).
-- **No label transitions.** Status / label moves on the active tracker are
-  [`/triage`](../triage/SKILL.md)'s job. This skill may
-  *recommend* a transition (e.g. "looks ready for `/draft-contract`") but
-  applies nothing itself.
+- **No tracker label transitions.** Status / label moves on the active
+  tracker are [`/triage`](../triage/SKILL.md)'s job. This skill may
+  *recommend* a transition (e.g. "looks ready for `Todo`") but applies
+  nothing itself.
 - **No production instrumentation without explicit user approval.** Phase 4
-  logs are local; production probes need the user to say yes per the
-  governance plan's protected-paths convention.
+  logs are local; production probes need the user to say yes.
 - **No architectural refactoring inline.** Phase 5 may *note* that the
   architecture blocks a regression test, but the actual restructuring is a
   separate skill invocation, not an extension of this one.
@@ -286,13 +273,6 @@ their own provenance via git history.
 - [`../feedback-loop/SKILL.md`](../feedback-loop/SKILL.md) — sibling
   reference on constructing loops; pattern detail for the ten approaches in
   Phase 1.
-- [`../draft-contract/SKILL.md`](../draft-contract/SKILL.md) — downstream
-  (lifts a diagnosed bug into a goal-contract).
-- [`../attest/SKILL.md`](../attest/SKILL.md) — gates the contract.
 - [Matt Pocock's `diagnose`](https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnose/SKILL.md)
   — upstream inspiration for the six-phase loop. The phases here are the
-  same; the AFK / tracker / contract integration is what's added.
-- `valesco-platform/docs/afk/governance-plan.md` §G8 (planner → main handoff
-  — why a contract drafted from an undiagnosed bug is structurally weak).
-- `valesco-platform/docs/afk/governance-plan.md` §G10 (Tier-1 verifier
-  determinism requirement).
+  same; the tracker integration is what's added.

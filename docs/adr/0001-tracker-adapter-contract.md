@@ -1,6 +1,7 @@
 # ADR-0001: Tracker adapter contract
 
-- **Status**: Accepted
+- **Status**: Accepted (the contract survives the runway pivot — see
+  Status section)
 - **Date**: 2026-05-01
 - **Deciders**: Jason Kennemer (Valesco) + Claude (design grill)
 - **Format**: based on Matt Pocock's
@@ -8,33 +9,28 @@
 
 ## Context
 
-Flightplan's `linear-triage`, `draft-contract`, `brief-to-contract`, and
-`diagnose` skills bind directly to Linear via `mcp__plugin_productivity_linear__*`
-calls. About 70% of `linear-triage/SKILL.md` is in fact vendor-agnostic
-Valesco doctrine (AFK eligibility from `.afk/config.yml`, tier mapping,
-§14.3 control-plane refusals, the canonical state machine, the Agent Brief
-format) — only ~10% is genuinely Linear-specific. The skill *feels*
-Linear-coupled because the table of contents leads with Linear MCP
-operations and uses Linear's status names.
+Flightplan's triage and diagnosis skills originally bound directly to
+Linear via `mcp__plugin_productivity_linear__*` calls. About 70% of the
+old `linear-triage/SKILL.md` was in fact vendor-agnostic Valesco doctrine
+(the canonical state machine, comment shape, eligibility checks) — only
+~10% was genuinely Linear-specific. The skill *felt* Linear-coupled
+because the table of contents led with Linear MCP operations and used
+Linear's status names.
 
 Valesco wants:
 
-1. To use the same triage and contract-drafting machinery against GitHub
-   Issues for low-priority projects (a free-tier alternative).
+1. To use the same triage and debugging machinery against GitHub Issues
+   for projects that don't justify a Linear seat.
 2. To eventually support Jira and local-markdown trackers without
    re-authoring core flightplan logic each time.
 3. The "context layer" — issue body + comments + labels + status — to be
-   a *modular component*, plug-replaceable per repo, while the brief
-   format and AFK doctrine stay shared across all adapters.
+   a *modular component*, plug-replaceable per repo, while the canonical
+   state machine and skill behavior stay shared across all adapters.
 
 The forces:
 
 - Three relevant providers already have first-class MCPs (Linear, GitHub,
   Atlassian); local markdown does not.
-- Valesco's authority schemas (`goal-contract.v1.json`,
-  `attestation-record.v1.json`) bake in `linearIssueId` as the keying
-  field with a regex `^[A-Z]{2,6}-\d+$`. True vendor neutrality crosses
-  the skills/pipeline boundary.
 - We don't want consumer skills to know which vendor is in use — that
   defeats the modularity goal.
 
@@ -68,8 +64,7 @@ Optional capabilities (declared by the adapter):
 ```
 
 Consumer skills query `adapter.capabilities` before using vendor-specific
-features (Tier-1 customer recommendations, active-work read-only checks,
-team-scoped queries).
+features (active-work read-only checks, team-scoped queries).
 
 ### 3. Flightplan-canonical labels and statuses with three-layer resolution
 
@@ -82,8 +77,6 @@ write.
 ### 4. Discovery via existing `.afk/config.yml`
 
 ```yaml
-afkEligible: true
-projectTier: 2
 tracker: linear            # default if absent
 trackerLabelsPath: .afk/tracker-labels.yml   # optional
 ```
@@ -97,8 +90,8 @@ surface.
 
 - Adding a new tracker is one new `tracker-<provider>/` directory; no
   consumer-skill edits required.
-- The same `triage`, `draft-contract`, `brief-to-contract`, `diagnose`
-  skills work against any supported vendor.
+- The same `triage` and `diagnose` skills work against any supported
+  vendor.
 - Future skills can reuse the adapter contract for free.
 - Capability-gated logic means low-richness vendors degrade gracefully
   rather than failing opaquely.
@@ -126,35 +119,27 @@ surface.
   into Jira-specific calls; no real seam. Useful as the soft fallback
   when no adapter SKILL.md exists, not as the primary mechanism.
 
-### Phase B blocker (acknowledged)
-
-The `linearIssueId` field name and `^[A-Z]{2,6}-\d+$` regex live in
-`valesco-platform`'s authority schemas. This contract does **not**
-resolve them. GitHub-issue contracts will fail schema validation at
-`/draft-contract` until a separate v2 migration in valesco-platform
-renames the field to `trackerIssueId` and broadens the regex. The GitHub
-adapter still works fully through `/triage` independently of that
-migration.
-
 ## Status
 
-Accepted. Implementation ships in two phases:
+Accepted. Survives the runway pivot of 2026-05-08, which removed the
+AFK-pipeline-specific consumer skills (`/draft-contract`, `/attest`,
+`/brief-to-contract`, `/run-attested`). The remaining consumers
+(`/triage`, `/diagnose`) still use the adapter contract unchanged.
 
-- **PR A1** — rename `linear-triage` → `triage`, author `tracker-linear`,
-  refactor consumer skills, update docs, register the schema-migration
-  blocker.
-- **PR A2** — `tracker-github` proof-of-concept (follow-up).
+The ADR was originally written when this repo's consumer chain ended in
+an AFK pre-flight + attestation gate; that chain has been retired and
+replaced by [runway](https://github.com/ValescoAgency/runway), which
+reads issues directly from the tracker. The adapter contract didn't
+need to change — it was always tracker-shaped, never AFK-shaped.
 
-Schema migration in `valesco-platform` is a separate ticket gated by
-real demand for full vendor neutrality.
+The historical "Phase B blocker" referenced in earlier revisions
+(GitHub-shaped issue IDs failing a Linear-tuned schema regex in
+`valesco-platform`) is no longer relevant — that schema lived in the
+retired AFK pipeline.
 
 ## References
 
 - [`/Users/jkennemer/Developer/flightplan/CONTEXT.md`](../../CONTEXT.md)
   — ubiquitous language including all terms used here.
-- [`docs/refactor-plan.md`](../refactor-plan.md) — phased PR roadmap.
-- `valesco-platform/docs/afk/governance-plan.md` §G8 (planner→main token
-  gate), §G10 (Tier-1 canary), §14.3 (control-plane self-modification
-  refusal).
 - [Matt Pocock's `/setup-matt-pocock-skills`](https://github.com/mattpocock/skills/blob/main/skills/engineering/setup-matt-pocock-skills/SKILL.md)
   — the fallback pattern this contract supersedes for Valesco repos.
