@@ -47,6 +47,7 @@ the adapter system below.
 | [`/triage`](skills/triage/SKILL.md) | Funnel issues into `Todo` with sharp acceptance criteria so runway will pick them up. HITL-aware. |
 | [`/diagnose`](skills/diagnose/SKILL.md) | Six-phase debugging discipline; Phase 1 builds a deterministic feedback loop. |
 | [`/feedback-loop`](skills/feedback-loop/SKILL.md) | The 10-pattern catalog for constructing deterministic agent-runnable signals. |
+| [`/handoff`](skills/handoff/SKILL.md) | Compact the current conversation into a handoff document so another agent can continue the work. |
 
 ## Tracker adapters
 
