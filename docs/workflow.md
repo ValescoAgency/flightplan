@@ -26,7 +26,7 @@ idea / conversation / paste
         │
         ├─→ needs-human  → HITL exit (human picks up)
         ├─→ needs-info   → wait for reporter
-        └─→ Todo         (runway pickup state)
+        └─→ ready-for-agent  (label; runway pickup signal)
                 │
                 ▼
         /diagnose           (Valesco — Bugs only; build a deterministic loop)
@@ -37,7 +37,7 @@ idea / conversation / paste
         /grill-with-docs    (optional, when domain alignment looks suspect)
                 │
                 ▼
-   ─── runway picks the issue up from Todo ───────────────────────────
+   ─── runway picks the issue up via the `ready-for-agent` label ────
                 │
                 ▼
    sandcastle (Claude Code in Docker) implements the issue
@@ -49,9 +49,12 @@ idea / conversation / paste
    PR opened on GitHub                    (human reviews + merges)
 ```
 
-The handoff to runway is **the issue body in `Todo`**. Whatever's in the
-issue is what Claude Code sees. So `/triage`'s job is to make sure the
-issue body has clear acceptance criteria before letting it become `Todo`.
+The handoff to runway is **the issue body when `ready-for-agent` is
+applied**. Whatever's in the issue at that moment is what Claude Code
+sees. So `/triage`'s job is to make sure the issue body has clear
+acceptance criteria before applying the label. Status is left to the
+tracker's GitHub integration (PR open → `In Progress`, PR merge →
+`Done`) — it's a useful side effect, not the queue gate.
 
 ## Stage ownership
 
@@ -60,7 +63,7 @@ issue body has clear acceptance criteria before letting it become `Todo`.
 | Idea → aligned plan | [`/grill-with-docs`](https://github.com/mattpocock/skills/blob/main/skills/engineering/grill-with-docs/SKILL.md) | Matt | Alignment + locks domain language in `CONTEXT.md` + records ADRs inline |
 | Plan → PRD | [`/to-prd`](https://github.com/mattpocock/skills/blob/main/skills/engineering/to-prd/SKILL.md) | Matt | Synthesizes a PRD from current context; posts to the tracker |
 | PRD → issues | [`/to-issues`](https://github.com/mattpocock/skills/blob/main/skills/engineering/to-issues/SKILL.md) | Matt | Breaks the PRD into vertical-slice tracer-bullet issues |
-| Tracker issue → Todo | [`/triage`](../skills/triage/SKILL.md) | Valesco | Ensure body has sharp acceptance criteria; transition to `Todo` so runway picks it up; HITL-aware |
+| Tracker issue → `ready-for-agent` | [`/triage`](../skills/triage/SKILL.md) | Valesco | Ensure body has sharp acceptance criteria; apply `ready-for-agent` so runway picks it up; HITL-aware |
 | Bug needs reproducer | [`/diagnose`](../skills/diagnose/SKILL.md) | Valesco | Six-phase loop; Phase 1 builds a deterministic feedback loop |
 | Construct a feedback loop | [`/feedback-loop`](../skills/feedback-loop/SKILL.md) | Valesco | The 10-pattern catalog for deterministic agent-runnable signals |
 | Architecture review | [`/improve-codebase-architecture`](https://github.com/mattpocock/skills/blob/main/skills/engineering/improve-codebase-architecture/SKILL.md) | Matt | Find deepening opportunities; informed by `CONTEXT.md` + ADRs |
@@ -182,7 +185,7 @@ that gracefully and routing to a human without losing work.
 
 | Trigger | Where it fires | Skill response |
 |---|---|---|
-| Triage decides this needs a human | `/triage` Step 5 | Apply `needs-human`, post a Human Brief explaining why. Status stays out of `Todo` so runway won't grab it. |
+| Triage decides this needs a human | `/triage` Step 5 | Apply `needs-human`, post a Human Brief explaining why. runway drains by `ready-for-agent` label, so an issue tagged `needs-human` (and not `ready-for-agent`) is invisible to runway. |
 | `/diagnose` cannot build a feedback loop | Phase 1 fallback | Drop back to `/triage` with `needs-info` listing the specific blockers. |
 | Sub-agent review surfaces a real concern | runway (not a skill) | runway opens the PR with the concern in the body; the human decides whether to merge or close. |
 

@@ -1,6 +1,6 @@
 ---
 name: diagnose
-description: Disciplined diagnosis loop for hard bugs and performance regressions. Reproduce → hypothesise → instrument → fix → regression-test, with Phase 1 (build a feedback loop) load-bearing. Use when the user says "diagnose this", "debug this", "reproduce this bug", "this is throwing/failing/broken in prod", "why is this slow", or describes a performance regression. Distinct from `/triage` (which decides whether a bug has enough information to be tractable at all). Run this AFTER triage has confirmed the issue is real, BEFORE letting the issue advance to `Todo` for runway — the regression test you write seeds the issue's acceptance criteria and the loop you build proves the fix actually closes the bug.
+description: Disciplined diagnosis loop for hard bugs and performance regressions. Reproduce → hypothesise → instrument → fix → regression-test, with Phase 1 (build a feedback loop) load-bearing. Use when the user says "diagnose this", "debug this", "reproduce this bug", "this is throwing/failing/broken in prod", "why is this slow", or describes a performance regression. Distinct from `/triage` (which decides whether a bug has enough information to be tractable at all). Run this AFTER triage has confirmed the issue is real, BEFORE letting the issue become `ready-for-agent` for runway — the regression test you write seeds the issue's acceptance criteria and the loop you build proves the fix actually closes the bug.
 ---
 
 # /diagnose
@@ -17,7 +17,7 @@ next skill in the chain — see [§ Outputs](#outputs-that-flow-downstream).
 
 After [`/triage`](../triage/SKILL.md) has classified the issue as a `Bug`
 with enough detail to attempt reproduction, but **before** the issue
-advances to `Todo` for runway. An issue that lands in runway without a
+becomes `ready-for-agent` for runway. An issue that lands in runway without a
 concrete reproducer almost always produces a "fix" that passes review
 without proving anything — the regression test you build here pins the
 behavior down.
@@ -236,7 +236,7 @@ issue body itself.
 | New domain term encountered | Update [`CONTEXT.md`](../../docs/workflow.md#contextmd--ubiquitous-language) right there — same discipline as `/grill-with-docs`. Lazy-create the file if it doesn't exist. |
 
 After this skill finishes, the next step is [`/triage`](../triage/SKILL.md)
-to advance the issue to `Todo` (or `needs-human` if the diagnosis surfaced
+to advance the issue to `ready-for-agent` (or `needs-human` if the diagnosis surfaced
 something that runway shouldn't handle).
 
 ## AI disclaimer
@@ -258,7 +258,7 @@ their own provenance via git history.
 
 - **No tracker label transitions.** Status / label moves on the active
   tracker are [`/triage`](../triage/SKILL.md)'s job. This skill may
-  *recommend* a transition (e.g. "looks ready for `Todo`") but applies
+  *recommend* a transition (e.g. "looks ready for `ready-for-agent`") but applies
   nothing itself.
 - **No production instrumentation without explicit user approval.** Phase 4
   logs are local; production probes need the user to say yes.

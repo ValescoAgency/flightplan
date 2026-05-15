@@ -32,8 +32,8 @@ PR. Looks for the same things a careful human reviewer would: regressions,
 missing tests, scope creep, brittle patterns. Output goes in the PR body.
 
 **HITL** — *Human In The Loop.* An issue or stage that needs human
-judgment and shouldn't go to runway. Routed to `needs-human` rather than
-`Todo`.
+judgment and shouldn't go to runway. Labeled `needs-human` instead of
+`ready-for-agent`.
 
 ## Tracker domain
 
@@ -71,7 +71,8 @@ protection on this capability.
 
 **Acceptance criteria** — the testable bullets in an issue body that
 runway / Claude Code reads as the spec for what to build. `/triage` makes
-sure these exist and are sharp before transitioning the issue to `Todo`.
+sure these exist and are sharp before applying the `ready-for-agent`
+label.
 
 **Triage Notes** — the comment posted when an issue moves to `needs-info`.
 Lists what's established and the specific facts the reporter needs to
@@ -87,13 +88,19 @@ Vocabulary that consumer skills use unchanged across vendors. Adapters
 translate to/from vendor-native names per `tracker-<provider>/labels.yml`,
 with optional per-repo override at `.afk/tracker-labels.yml`.
 
-**State labels**: `needs-triage`, `needs-info`, `needs-human`, `wontfix`.
+**State labels**: `ready-for-agent`, `needs-triage`, `needs-info`,
+`needs-human`, `wontfix`. At most one per issue (mutually exclusive on
+this axis).
 
 **Category labels**: `Bug`, `Feature`, `Improvement`.
 
 **Status values**: `triage`, `backlog`, `todo`, `in-progress`,
 `in-review`, `done`, `canceled`, `duplicate`.
 
-`Todo` is the runway pickup state — issues in `Todo` with sharp
-acceptance criteria are what runway scans for. `needs-human` is the HITL
-exit; the issue stays open but routes to a human PR rather than runway.
+**`ready-for-agent` is the runway pickup signal.** runway drains issues
+carrying this label. `needs-human` is the HITL exit; the issue stays
+open but routes to a human PR rather than runway. **Status** is owned
+by humans + the tracker's GitHub integration (PR cross-references and
+state transitions drive it automatically). Status is *not* the queue
+gate — using status for the queue caused premature drains every time a
+PR mentioned an issue.

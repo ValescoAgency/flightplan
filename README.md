@@ -39,12 +39,12 @@ After install, skills are invocable as `flightplan:<skill-name>` (e.g.
 ## Consumer skills
 
 User-invoked skills that drive issues toward the runway pickup state
-(tracker `Todo`). Vendor-agnostic — they read the active tracker via
+(label `ready-for-agent`). Vendor-agnostic — they read the active tracker via
 the adapter system below.
 
 | Skill | Purpose |
 |---|---|
-| [`/triage`](skills/triage/SKILL.md) | Funnel issues into `Todo` with sharp acceptance criteria so runway will pick them up. HITL-aware. |
+| [`/triage`](skills/triage/SKILL.md) | Funnel issues to the `ready-for-agent` label with sharp acceptance criteria so runway will pick them up. HITL-aware. |
 | [`/diagnose`](skills/diagnose/SKILL.md) | Six-phase debugging discipline; Phase 1 builds a deterministic feedback loop. |
 | [`/feedback-loop`](skills/feedback-loop/SKILL.md) | The 10-pattern catalog for constructing deterministic agent-runnable signals. |
 | [`/handoff`](skills/handoff/SKILL.md) | Compact the current conversation into a handoff document so another agent can continue the work. |

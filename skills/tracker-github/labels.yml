@@ -48,6 +48,10 @@ categories:
 # directly; GitHub repos using the flightplan triage funnel will have
 # these labels created on first use via the lazy-create flow.
 state_labels:
+  ready-for-agent:
+    name: ready-for-agent
+    color: "0075ca"
+    description: "Body is sharp enough that runway can pick this up (queue gate)"
   needs-info:
     name: needs-info
     color: "fbca04"
