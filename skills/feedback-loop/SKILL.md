@@ -347,7 +347,7 @@ Walk this tree top-to-bottom. Stop at the first "yes."
    (differential).
 10. **Final fallback** — and only after honestly trying 1–9: Pattern 10
     (HITL bash). The loop will not be replayable by an autonomous run, so
-    the issue probably needs `needs-human` rather than `Todo`.
+    the issue probably needs `needs-human` rather than `ready-for-agent`.
 
 If you fall off the bottom of the tree without a fit, the bug isn't
 loopable yet — return to `/triage` and request reproducer access,

@@ -17,6 +17,7 @@ categories:
 
 # State labels — at most one per issue.
 state_labels:
+  ready-for-agent: ready-for-agent  # runway queue gate (the label runway drains on); see CHANGELOG 1.1.0
   needs-info: needs-info
   needs-human: needs-human
   wontfix: wontfix

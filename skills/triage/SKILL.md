@@ -1,26 +1,37 @@
 ---
 name: triage
-description: Funnel tracker issues into `Todo` with sharp acceptance criteria so runway will pick them up. Vendor-agnostic — works with whatever tracker the repo declares (Linear today; GitHub Issues shipped). Use when the user wants to work the inbox, prepare issues for a runway run, decide which issues an agent can take vs. which require a human, or work the Triage queue. Reach for this skill any time the user mentions triaging, classifying, or moving issues toward an autonomous run — even if they don't explicitly say "triage."
+description: Funnel tracker issues to the `ready-for-agent` label with sharp acceptance criteria so runway will pick them up. Vendor-agnostic — works with whatever tracker the repo declares (Linear today; GitHub Issues shipped). Use when the user wants to work the inbox, prepare issues for a runway run, decide which issues an agent can take vs. which require a human, or work the Triage queue. Reach for this skill any time the user mentions triaging, classifying, or moving issues toward an autonomous run — even if they don't explicitly say "triage."
 ---
 
 # /triage — runway funnel
 
 The purpose of this skill is to **prepare tracker issues for runway**.
-runway scans the tracker for issues in `Todo`, hands each one to
-`@ai-hero/sandcastle` (Claude Code in Docker), runs an adversarial
-sub-agent review, and opens a PR. Trust comes from human PR review, not
-from upstream gates.
+runway scans the tracker for issues labeled `ready-for-agent`, hands
+each one to `@ai-hero/sandcastle` (Claude Code in Docker), runs an
+adversarial sub-agent review, and opens a PR. Trust comes from human PR
+review, not from upstream gates.
 
 So every triage decision answers one question:
 
 > *Is this issue body sharp enough that Claude Code, reading nothing but
 > the issue, will produce a PR a human is happy to review?*
 
-If yes → ensure acceptance criteria are present and move the issue to
-`Todo`.
+If yes → ensure acceptance criteria are present and apply the
+`ready-for-agent` label.
 If not yet → identify what's missing and either ask the reporter
 (`needs-info`) or park it (`backlog`).
 If never → eject it cleanly: `needs-human`, `canceled`, or `duplicate`.
+
+### Why the queue is a label, not a status
+
+Linear's GitHub integration auto-mutates issue **status** when a PR
+cross-references the issue (`Triage`/`Backlog`/`Todo` → `In Progress`).
+A status-gated queue drains every time a PR mentions the issue, even
+when runway hasn't picked it up. The queue gate is therefore a
+**label** (`ready-for-agent`) — labels are not touched by the GitHub
+integration. Status remains useful as a human kanban signal and is
+driven naturally by the integration (PR opens → `In Progress`, PR
+merges → `Done`).
 
 The Agent-Brief-as-comment pattern is gone. **runway reads the issue
 body directly** — there's no separate brief artifact for it to consume.
@@ -93,7 +104,7 @@ The skill speaks these values; the adapter maps to vendor-native names.
 |---|---|
 | `triage` | Incoming. Has not been classified or has open questions. |
 | `backlog` | Ejected from active triage but not killed. Will revisit later. |
-| `todo` | **Ready for runway, or marked `needs-human` for a human.** Acceptance criteria are sharp. |
+| `todo` | Human kanban: "this is on deck". Often co-occurs with `ready-for-agent` (runway will pick up) or `needs-human` (a human will pick up), but neither is required — humans may use `todo` for issues outside the runway funnel entirely. |
 | `in-progress` / `in-review` / `reviewed` | Active work. Off-limits to this skill — read-only. |
 | `done` | Closed normally. |
 | `canceled` | Won't fix. Permanent ejection. |
@@ -103,8 +114,9 @@ The skill speaks these values; the adapter maps to vendor-native names.
 
 | Label | Meaning |
 |---|---|
+| `ready-for-agent` | **The runway queue gate.** Body has sharp acceptance criteria; runway will pick this up. Mutually exclusive with the other state labels. |
 | `needs-info` | Specific, named information is missing — without it the issue body isn't sharp enough for runway. Status stays `triage`. |
-| `needs-human` | Cannot become runway-eligible (production access, judgment that doesn't reduce to acceptance criteria, cross-team coordination). Status moves to `Todo` so the human picks it up; runway skips issues carrying this label. |
+| `needs-human` | Cannot become runway-eligible (production access, judgment that doesn't reduce to acceptance criteria, cross-team coordination). A human picks this up; runway skips issues carrying this label. |
 
 ### Category labels (apply exactly one)
 
@@ -123,15 +135,15 @@ The skill speaks these values; the adapter maps to vendor-native names.
 
 ## State machine
 
-The funnel direction is **toward `Todo`**. Each transition either
-advances toward it, parks the issue, or ejects it.
+The funnel direction is **toward the `ready-for-agent` label**. Each
+transition either advances toward it, parks the issue, or ejects it.
 
 | From | To | Direction | Trigger | Action |
 |---|---|---|---|---|
 | New (`triage`, no labels) | + category, stays `triage` | enter | Skill on first look | Apply category, post recommendation comment. |
 | `triage` | + `needs-info` | park | Maintainer (skill) | Specific missing info named. Skill posts Triage Notes with what's blocking. |
-| `triage` / `needs-info` | `todo` (no state label) | **advance** | Maintainer (skill, after grilling) | Skill ensures the issue body has sharp acceptance criteria, removes `needs-info` if present, moves status to `Todo`. runway picks up from here. |
-| `triage` / `needs-info` | `todo` + `needs-human` | eject (HITL) | Maintainer (skill) | Body is sharp but reasons exist not to use runway (production access, judgment calls). Status moves to `Todo`; the `needs-human` label tells runway to skip. |
+| `triage` / `needs-info` | + `ready-for-agent` | **advance** | Maintainer (skill, after grilling) | Skill ensures the issue body has sharp acceptance criteria, removes `needs-info` if present, applies `ready-for-agent`. **Status policy:** if status is currently `triage` or `backlog`, advance to `todo` as a visibility cue; if status is anything past `todo` (active work), leave it alone. The runway queue is keyed on the label, not the status. |
+| `triage` / `needs-info` | + `needs-human` | eject (HITL) | Maintainer (skill) | Body is sharp but reasons exist not to use runway (production access, judgment calls). Applies `needs-human`. Same status policy: advance `triage`/`backlog` → `todo` for visibility; leave active-work statuses alone. runway skips issues carrying `needs-human`. |
 | `triage` / `needs-info` | `backlog` | park | Maintainer (skill) | Acknowledged but deferred. Brief reasoning posted. |
 | `triage` / `needs-info` | `canceled` | eject | Maintainer (skill) | Polite explanation. For `Feature`/`Improvement`, write `.out-of-scope/<concept>.md`. |
 | `triage` / `needs-info` | `duplicate` | eject | Maintainer (skill) | Comment links the canonical issue. |
@@ -150,7 +162,7 @@ Examples:
 - "What's closest to ready for runway?"
 - "Show me what needs attention"
 - "Let's look at issue 87"  (or `VA-87`, or `owner/repo#42` — depends on tracker)
-- "Move issue 42 to Todo"
+- "Mark issue 42 ready for runway" (or the old "Move issue 42 to Todo" — both work)
 - "Anything blocked on the reporter for over a week?"
 
 If the tracker has a team-namespace concept and the namespace is
@@ -252,8 +264,8 @@ reasoning before the issue moves.
 
 | Outcome | Comment to post | Labels | Status |
 |---|---|---|---|
-| Runway-ready | (optional) "Promoting to Todo — runway will pick this up" | + category, − `needs-info` | `todo` |
-| Human-only (HITL) | **Human Brief** — short paragraph explaining *why human, not runway* (production access, judgment, etc.) | + category, + `needs-human`, − `needs-info` | `todo` |
+| Runway-ready | (optional) "Applying `ready-for-agent` — runway will pick this up" | + category, + `ready-for-agent`, − `needs-info` | `todo` if currently `triage`/`backlog`, else untouched |
+| Human-only (HITL) | **Human Brief** — short paragraph explaining *why human, not runway* (production access, judgment, etc.) | + category, + `needs-human`, − `needs-info` | `todo` if currently `triage`/`backlog`, else untouched |
 | `needs-info` | **Triage Notes** — what's established + the *specific* missing facts (template below) | + category, + `needs-info` | `triage` |
 | Won't fix (Bug) | Polite explanation | + `Bug` | `canceled` |
 | Won't fix (Feature/Improvement) | Polite explanation **and** link to the `.out-of-scope/` file | + category | `canceled` |
@@ -277,19 +289,19 @@ performs the calls. Cache resolved IDs within the session.
 
 ## Workflow: quick state override
 
-When the maintainer says "move issue 42 to Todo", trust them. Skip
-grilling.
+When the maintainer says "mark issue 42 ready for runway" (or the
+shorthand "move issue 42 to Todo"), trust them. Skip grilling.
 
 Still confirm before writing:
 
-- Labels to add/remove
-- Status to apply
+- Labels to add/remove (the runway-ready transition adds `ready-for-agent`)
+- Status to apply (per the smart policy: only advance `triage`/`backlog` → `todo`)
 - Whether to post a comment, and what kind
 
-For `Todo` without prior grilling, ask once: "The issue body looks like
-[summary]. Sharp enough for runway, or want to flesh it out first?" If
-the body is genuinely thin, runway will produce a thin PR — say so and
-let the maintainer decide.
+For a runway-ready transition without prior grilling, ask once: "The
+issue body looks like [summary]. Sharp enough for runway, or want to
+flesh it out first?" If the body is genuinely thin, runway will produce
+a thin PR — say so and let the maintainer decide.
 
 ## Needs-info template
 
@@ -308,7 +320,7 @@ they're answered.
 - point 1
 - point 2
 
-**What we need before this can move to Todo (@<reporter>):**
+**What we need before this can be picked up by runway (@<reporter>):**
 
 - A specific success criterion, e.g. "When X happens, the user should
   see Y" — what's the testable outcome?
@@ -343,4 +355,4 @@ When triaging an issue with prior triage activity:
 - [`../diagnose/SKILL.md`](../diagnose/SKILL.md) — downstream Bug
   reproduction skill.
 - [`runway`](https://github.com/ValescoAgency/runway) — what picks the
-  issue up once it's in `Todo`.
+  issue up once it's labeled `ready-for-agent`.

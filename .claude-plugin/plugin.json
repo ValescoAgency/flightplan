@@ -1,6 +1,6 @@
 {
   "name": "flightplan",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Valesco-authored Claude Code skills for harness engineering and tracker triage. Vendor-agnostic via the tracker adapter contract — ships with Linear and GitHub Issues adapters. Bundles triage (/triage), debugging discipline (/diagnose), and the feedback-loop pattern catalog (/feedback-loop). Outputs feed runway, Valesco's autonomous coding CLI.",
   "author": {
     "name": "Valesco Agency",
